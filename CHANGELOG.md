@@ -1,0 +1,61 @@
+# smullyan
+
+## 0.1.0
+### Minor Changes
+
+
+
+- [#4](https://github.com/phyter1/smullyan/pull/4) [`53df882`](https://github.com/phyter1/smullyan/commit/53df88255c82172986517d42438f0fd8fd8fd6a9) Thanks [@phyter1](https://github.com/phyter1)! - Add eleven combinators to the aviary: Idiot (`I`/`identity`), Kestrel
+  (`K`/`constant`), Kite (`KI`), Bluebird (`B`/`compose`), Blackbird
+  (`B1`/`compose2`), Cardinal (`C`/`flip`), Warbler (`W`/`duplicate`), Thrush
+  (`T`/`applyTo`), Starling (`S`/`ap`), Psi (`P`/`on`), and Phoenix
+  (`Phi`/`converge`).
+  
+  Each is curried, exported under its symbol, bird name, and familiar FP name
+  where one exists, and covered by runtime tests, type-level assertions, and
+  property-based algebraic laws including the `S K K ≡ I` and `W K ≡ I`
+  derivations.
+
+
+- [#5](https://github.com/phyter1/smullyan/pull/5) [`71e9d11`](https://github.com/phyter1/smullyan/commit/71e9d112ab1ac2253ca2d23013267e5b05d0e241) Thanks [@phyter1](https://github.com/phyter1)! - Add nineteen more combinators, bringing the aviary to thirty: Vireo (`V`/`pair`),
+  Robin (`R`), Finch (`F`), Queer (`Q`/`pipe2`), the four Q-birds (`Q1`–`Q4`),
+  Becard (`B3`/`compose3`), Bunting (`B2`), Goldfinch (`G`), Dove (`D`),
+  Dickcissel (`D1`), Dovekies (`D2`), Eagle (`E`), Jay (`J`), Hummingbird (`H`),
+  and the once-removed birds `IStar`/`apply`, `WStar` and `CStar`.
+
+
+- [#8](https://github.com/phyter1/smullyan/pull/8) [`bcbb209`](https://github.com/phyter1/smullyan/commit/bcbb2094d108fdd1b5874e695ba06906ea42599c) Thanks [@phyter1](https://github.com/phyter1)! - Add `Option<A>` at `smullyan/option` and `Result<E, A>` at `smullyan/result`.
+  
+  Both are discriminated unions rather than classes, so they narrow with a bare
+  `switch` on `_tag`, survive `JSON.stringify`, and carry no prototype. Every
+  combinator is curried and data-last so it drops straight into `pipe`. Monad,
+  functor and applicative laws are asserted with property tests.
+
+
+- [#7](https://github.com/phyter1/smullyan/pull/7) [`8fca8cd`](https://github.com/phyter1/smullyan/commit/8fca8cdd40e51298ecd9ea851b14625f8ffeabbc) Thanks [@phyter1](https://github.com/phyter1)! - Add `pipe` and `flow` at `smullyan/pipe`, with hand-written overload chains
+  giving exact inference for up to twenty functions. `pipe` threads a value
+  left to right; `flow` composes functions without supplying a value, and its
+  first function may take any number of arguments.
+
+
+- [#9](https://github.com/phyter1/smullyan/pull/9) [`cd35826`](https://github.com/phyter1/smullyan/commit/cd35826fc422dea95b30b3ad4293ffc29ec39d96) Thanks [@phyter1](https://github.com/phyter1)! - Add `Task<A>` at `smullyan/task` and `Reader<R, A>` at `smullyan/reader`.
+  
+  `Task` is a thunked promise — a description of asynchronous work rather than
+  work already in flight, so it can be retried, delayed and composed
+  referentially. `Reader` is the environment monad, whose `map`, `ap` and
+  `flatten` are the Bluebird, Starling and Warbler respectively; the law suite
+  asserts those equivalences directly.
+  
+  Also fixes silent type-parameter widening in `Result.map`, `Result.mapErr`,
+  `Result.flatMap`, `Result.ap` and `Reader.map`, where `E`/`R` were declared on
+  a call that could not infer them and defaulted to `unknown`.
+
+
+- [#6](https://github.com/phyter1/smullyan/pull/6) [`d559f06`](https://github.com/phyter1/smullyan/commit/d559f0681015433a8871ab2ef12030c5a1e99a92) Thanks [@phyter1](https://github.com/phyter1)! - Add the hard forest — the five combinators that are not typeable in a
+  simply-typed lambda calculus: Mockingbird (`M`), Lark (`L`), Owl (`O`), Turing
+  bird (`U`) and Sage (`Y`/`fix`), plus the recursive types `SelfApplicable`,
+  `TuringSelf` and `SageSelf` that make them expressible.
+  
+  `Y` is the Z combinator — the eta-expanded fixed point that terminates under
+  eager evaluation — implemented through genuine self-application rather than a
+  named self-reference. This completes the aviary at thirty-five combinators.
