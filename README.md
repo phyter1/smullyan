@@ -4,11 +4,11 @@ A fully typesafe functional programming library for TypeScript: the
 combinatory-logic **bird combinators** of Raymond Smullyan's _To Mock a
 Mockingbird_, plus a small core of algebraic data types.
 
-> **Status: pre-release.** Thirty combinators are implemented and the full
-> build, test and verification pipeline is in place. The five birds of the hard
-> forest, and the `option` / `result` / `task` / `reader` / `pipe` entry points,
-> are still to come. The API of what exists is unlikely to change, but treat it
-> as unstable until `1.0.0`.
+> **Status: pre-release.** All thirty-five combinators are implemented,
+> including the hard forest, with the full build, test and verification
+> pipeline in place. The `option` / `result` / `task` / `reader` / `pipe` entry
+> points are still to come. The API of what exists is unlikely to change, but
+> treat it as unstable until `1.0.0`.
 
 ## Why birds
 
@@ -30,8 +30,8 @@ programmers already reach for:
 | Vireo    | `V x y f = f x y`       | `pair`         |
 | Sage     | `Y f = f (Y f)`         | `fix`          |
 
-Thirty are implemented today. The full aviary, with each bird's definition and
-its typing notes, lives in [`src/birds`](./src/birds).
+All thirty-five are implemented. The full aviary, with each bird's definition
+and its typing notes, lives in [`src/birds`](./src/birds).
 
 ## Install
 
@@ -115,9 +115,30 @@ interface SelfApplicable<A> {
 export const M = <A>(x: SelfApplicable<A>): A => x(x);
 ```
 
-Each of these documents which typing strategy was used and what it costs.
+Each documents which typing strategy was used and what it costs.
 "Fully typesafe" here means honest about the boundary, not pretending there
-isn't one.
+isn't one. Two boundaries are worth calling out:
+
+- **`M(M)` type-checks and loops forever.** That term is `Ω`, and it has no
+  normal form — no implementation could do better. Types rule out type errors,
+  not divergence.
+- **`Y` here is the Z combinator.** The textbook `Y` diverges under eager
+  evaluation; the eta-expanded form is extensionally equal for functions of at
+  least one argument, which is every practical use. It still achieves recursion
+  through self-application alone, with no named self-reference.
+
+```ts
+import { Y } from 'smullyan/birds';
+
+const factorial = Y<number, number>((rec) => (n) => (n <= 1 ? 1 : n * rec(n - 1)));
+factorial(5); // 120
+```
+
+Some identities are true at runtime but **not expressible** in TypeScript's
+type system — `B1 ≡ B B B` needs higher-rank polymorphism. Rather than leave
+those as folklore, they are asserted as `@ts-expect-error` facts in the test
+suite, so a future compiler release that gains the expressiveness fails the
+test loudly.
 
 ## Contributing
 
