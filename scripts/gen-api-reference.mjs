@@ -40,12 +40,12 @@ const OUT = join(ROOT, 'docs/reference/api.md');
 
 /** Every subpath entry point, and the dist file its exports are read from. */
 const ENTRIES = [
-  { name: 'smullyan/birds', stem: 'birds' },
-  { name: 'smullyan/pipe', stem: 'pipe' },
-  { name: 'smullyan/option', stem: 'option' },
-  { name: 'smullyan/result', stem: 'result' },
-  { name: 'smullyan/task', stem: 'task' },
-  { name: 'smullyan/reader', stem: 'reader' },
+  { name: 'smullyan/birds', stem: 'birds', srcDir: 'src/birds' },
+  { name: 'smullyan/pipe', stem: 'pipe', srcDir: 'src/pipe' },
+  { name: 'smullyan/option', stem: 'option', srcDir: 'src/option' },
+  { name: 'smullyan/result', stem: 'result', srcDir: 'src/result' },
+  { name: 'smullyan/task', stem: 'task', srcDir: 'src/task' },
+  { name: 'smullyan/reader', stem: 'reader', srcDir: 'src/reader' },
 ];
 
 /**
@@ -97,6 +97,46 @@ const summarise = (doc) => {
 };
 
 /**
+ * Read a complete declaration starting at `from`.
+ *
+ * A regex to end-of-line is not enough: an `interface` body spans lines, and a
+ * `const`'s type annotation frequently does too. Truncating at the newline
+ * produced entries whose entire signature was `interface Bluebird {` — which is
+ * the one thing an API reference exists to show.
+ *
+ * Scans with a brace/paren/bracket depth counter and stops at:
+ *   interface     the matching closing brace
+ *   type          the `;` at depth 0
+ *   const         the `=` at depth 0 (the value is not part of the signature)
+ */
+const readDeclaration = (text, from, kind) => {
+  let depth = 0;
+  for (let i = from; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === '{' || ch === '(' || ch === '[') depth += 1;
+    else if (ch === '}' || ch === ')' || ch === ']') {
+      depth -= 1;
+      if (kind === 'interface' && depth === 0) return text.slice(from, i + 1);
+    } else if (depth === 0) {
+      if (kind === 'type' && ch === ';') return text.slice(from, i);
+      // An arrow type contains `=`, so only a STANDALONE assignment ends the
+      // annotation. Without this, `const map: <A, B>(f: (a: A) => B) => ...`
+      // was truncated at the first `=>`.
+      if (
+        kind === 'const' &&
+        ch === '=' &&
+        text[i + 1] !== '>' &&
+        text[i + 1] !== '=' &&
+        !['=', '!', '<', '>', '+', '-', '*', '/', '&', '|'].includes(text[i - 1])
+      ) {
+        return text.slice(from, i);
+      }
+    }
+  }
+  return text.slice(from, text.indexOf('\n', from));
+};
+
+/**
  * Extract documented declarations from a source file.
  * Matches a TSDoc block immediately followed by an exported const/interface/type.
  */
@@ -104,30 +144,43 @@ const parseFile = (file) => {
   const text = readFileSync(file, 'utf8');
   const out = new Map();
   const re =
-    /(\/\*\*[\s\S]*?\*\/)\s*export\s+(?:declare\s+)?(const|interface|type)\s+([A-Za-z_$][\w$]*)([^\n]*)/g;
+    /(\/\*\*[\s\S]*?\*\/)\s*export\s+(?:declare\s+)?(const|interface|type)\s+([A-Za-z_$][\w$]*)/g;
   let m;
   while ((m = re.exec(text)) !== null) {
-    const [, rawDoc, kind, name, tail] = m;
+    const [, rawDoc, kind, name] = m;
+    const tail = readDeclaration(text, re.lastIndex, kind);
     const doc = cleanDoc(rawDoc);
     out.set(name, {
       name,
       kind,
       doc,
       summary: summarise(doc),
-      signature: `${kind} ${name}${tail.replace(/\s*=\s*$/, '').trimEnd()}`,
+      signature: `${kind} ${name}${tail.trimEnd()}`,
       file: relative(ROOT, file),
     });
   }
   return out;
 };
 
+// Keyed by name -> list of definitions, because the SAME name is exported by
+// several modules: Option.map, Result.map, Task.map and Reader.map are four
+// different functions. Keying by name alone made one silently shadow the rest.
 const allDocs = new Map();
 for (const f of walk(SRC)) {
   for (const [k, v] of parseFile(f)) {
-    // First definition wins; barrels re-export and must not shadow the source.
-    if (!allDocs.has(k)) allDocs.set(k, v);
+    if (!allDocs.has(k)) allDocs.set(k, []);
+    allDocs.get(k).push(v);
   }
 }
+
+/** Pick the definition belonging to this entry point, not a same-named sibling. */
+const resolve = (name, srcDir) => {
+  const candidates = allDocs.get(name);
+  if (!candidates) return null;
+  // Prefer a definition inside the entry's own directory, ignoring barrels.
+  const own = candidates.find((c) => c.file.startsWith(srcDir) && !c.file.endsWith('index.ts'));
+  return own ?? candidates.find((c) => !c.file.endsWith('index.ts')) ?? candidates[0];
+};
 
 const sections = [];
 const missing = [];
@@ -144,7 +197,7 @@ for (const entry of ENTRIES) {
 
   const rows = [];
   for (const name of runtimeExports) {
-    const d = allDocs.get(name);
+    const d = resolve(name, entry.srcDir);
     if (!d) {
       missing.push(`${entry.name} -> ${name}`);
       continue;

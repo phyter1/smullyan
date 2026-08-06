@@ -152,7 +152,7 @@ this generator can be retired then.
 ### ap
 
 ```ts
-const ap: Starling = S;
+const ap: Starling
 ```
 
 Reader applicative application. Identical to {@link S}.
@@ -162,7 +162,7 @@ Reader applicative application. Identical to {@link S}.
 ### apply
 
 ```ts
-const apply: IdiotOnceRemoved = IStar;
+const apply: IdiotOnceRemoved
 ```
 
 Explicit function application. Identical to {@link IStar}.
@@ -172,7 +172,7 @@ Explicit function application. Identical to {@link IStar}.
 ### applyTo
 
 ```ts
-const applyTo: Thrush = T;
+const applyTo: Thrush
 ```
 
 Apply a function to a value, value first. Identical to {@link T}.
@@ -182,7 +182,7 @@ Apply a function to a value, value first. Identical to {@link T}.
 ### B
 
 ```ts
-const B: Bluebird = (f) => (g) => (a) => f(g(a));
+const B: Bluebird
 ```
 
 Compose two functions, right to left.
@@ -203,7 +203,7 @@ incThenShow(1) // '2'
 ### B1
 
 ```ts
-const B1: Blackbird = (f) => (g) => (a) => (b) => f(g(a)(b));
+const B1: Blackbird
 ```
 
 Compose a unary function onto a curried binary one.
@@ -224,7 +224,7 @@ addThenShow(40)(2) // '42'
 ### B2
 
 ```ts
-const B2: Bunting = (f) => (g) => (a) => (b) => (c) => f(g(a)(b)(c));
+const B2: Bunting
 ```
 
 Compose a unary function onto a curried ternary one.
@@ -244,7 +244,7 @@ B2(show)(add3)(20)(20)(2) // '42'
 ### B3
 
 ```ts
-const B3: Becard = (f) => (g) => (h) => (a) => f(g(h(a)));
+const B3: Becard
 ```
 
 Compose three functions right to left.
@@ -265,7 +265,7 @@ B3(show)(dbl)(inc)(20) // '42'
 ### becard
 
 ```ts
-const becard: Becard = B3;
+const becard: Becard
 ```
 
 The Becard, by name. Identical to {@link B3}.
@@ -276,6 +276,8 @@ The Becard, by name. Identical to {@link B3}.
 
 ```ts
 interface Becard {
+  <C, D>(f: (c: C) => D): <B>(g: (b: B) => C) => <A>(h: (a: A) => B) => (a: A) => D;
+}
 ```
 
 The Becard — `B3`.
@@ -293,7 +295,7 @@ asserts the rank-1 equivalent `B3 f g h ≡ B (B f g) h`.
 ### blackbird
 
 ```ts
-const blackbird: Blackbird = B1;
+const blackbird: Blackbird
 ```
 
 The Blackbird, by name. Identical to {@link B1}.
@@ -304,6 +306,8 @@ The Blackbird, by name. Identical to {@link B1}.
 
 ```ts
 interface Blackbird {
+  <C, D>(f: (c: C) => D): <A, B>(g: (a: A) => (b: B) => C) => (a: A) => (b: B) => D;
+}
 ```
 
 The Blackbird — `B1`.
@@ -335,7 +339,7 @@ rewrapping it — `B1(not)(equals)` is `notEquals`.
 ### bluebird
 
 ```ts
-const bluebird: Bluebird = B;
+const bluebird: Bluebird
 ```
 
 The Bluebird, by name. Identical to {@link B}.
@@ -346,6 +350,8 @@ The Bluebird, by name. Identical to {@link B}.
 
 ```ts
 interface Bluebird {
+  <B, C>(f: (b: B) => C): <A>(g: (a: A) => B) => (a: A) => C;
+}
 ```
 
 The Bluebird — `B`.
@@ -397,7 +403,7 @@ which is why the negative `@ts-expect-error` suite exists.
 ### bunting
 
 ```ts
-const bunting: Bunting = B2;
+const bunting: Bunting
 ```
 
 The Bunting, by name. Identical to {@link B2}.
@@ -408,6 +414,10 @@ The Bunting, by name. Identical to {@link B2}.
 
 ```ts
 interface Bunting {
+  <D, E>(
+    f: (d: D) => E,
+  ): <A, B, C>(g: (a: A) => (b: B) => (c: C) => D) => (a: A) => (b: B) => (c: C) => E;
+}
 ```
 
 The Bunting — `B2`.
@@ -425,7 +435,7 @@ reaches over three.
 ### C
 
 ```ts
-const C: Cardinal = (f) => (b) => (a) => f(a)(b);
+const C: Cardinal
 ```
 
 Flip the argument order of a curried binary function.
@@ -446,7 +456,7 @@ flipped('foo')('bar') // 'barfoo'
 ### cardinal
 
 ```ts
-const cardinal: Cardinal = C;
+const cardinal: Cardinal
 ```
 
 The Cardinal, by name. Identical to {@link C}.
@@ -457,6 +467,8 @@ The Cardinal, by name. Identical to {@link C}.
 
 ```ts
 interface Cardinal {
+  <A, B, C>(f: (a: A) => (b: B) => C): (b: B) => (a: A) => C;
+}
 ```
 
 The Cardinal — `C`.
@@ -482,7 +494,7 @@ and must be deferred to the second.
 ### cardinalOnceRemoved
 
 ```ts
-const cardinalOnceRemoved: CardinalOnceRemoved = CStar;
+const cardinalOnceRemoved: CardinalOnceRemoved
 ```
 
 The Cardinal once removed, by name. Identical to {@link CStar}.
@@ -493,6 +505,8 @@ The Cardinal once removed, by name. Identical to {@link CStar}.
 
 ```ts
 interface CardinalOnceRemoved {
+  <A, B, C, D>(f: (a: A) => (c: C) => (b: B) => D): (a: A) => (b: B) => (c: C) => D;
+}
 ```
 
 The Cardinal once removed — `C*`.
@@ -510,7 +524,7 @@ the Cardinal, it is its own inverse.
 ### compose
 
 ```ts
-const compose: Bluebird = B;
+const compose: Bluebird
 ```
 
 Right-to-left function composition. Identical to {@link B}.
@@ -520,7 +534,7 @@ Right-to-left function composition. Identical to {@link B}.
 ### compose2
 
 ```ts
-const compose2: Blackbird = B1;
+const compose2: Blackbird
 ```
 
 Compose onto a binary function. Identical to {@link B1}.
@@ -530,7 +544,7 @@ Compose onto a binary function. Identical to {@link B1}.
 ### compose3
 
 ```ts
-const compose3: Becard = B3;
+const compose3: Becard
 ```
 
 Three-way right-to-left composition. Identical to {@link B3}.
@@ -540,7 +554,7 @@ Three-way right-to-left composition. Identical to {@link B3}.
 ### constant
 
 ```ts
-const constant: Kestrel = K;
+const constant: Kestrel
 ```
 
 The constant function. Identical to {@link K}.
@@ -550,7 +564,7 @@ The constant function. Identical to {@link K}.
 ### converge
 
 ```ts
-const converge: Phoenix = phoenix;
+const converge: Phoenix
 ```
 
 Converge two functions on one value. Identical to {@link phoenix}.
@@ -560,7 +574,7 @@ Converge two functions on one value. Identical to {@link phoenix}.
 ### CStar
 
 ```ts
-const CStar: CardinalOnceRemoved = (f) => (a) => (b) => (c) => f(a)(c)(b);
+const CStar: CardinalOnceRemoved
 ```
 
 Flip the last two arguments of a curried ternary function.
@@ -578,7 +592,7 @@ CStar(triple)('x')('y')('z') // 'x' + 'z' + 'y'
 ### D
 
 ```ts
-const D: Dove = (f) => (x) => (g) => (y) => f(x)(g(y));
+const D: Dove
 ```
 
 Apply a binary function with its second argument pre-processed.
@@ -598,7 +612,7 @@ D(add)(39)(len)('abc') // 42
 ### D1
 
 ```ts
-const D1: Dickcissel = (f) => (x) => (y) => (g) => (z) => f(x)(y)(g(z));
+const D1: Dickcissel
 ```
 
 Apply a ternary function with its third argument pre-processed.
@@ -608,7 +622,7 @@ Apply a ternary function with its third argument pre-processed.
 ### D2
 
 ```ts
-const D2: Dovekies = (f) => (g) => (x) => (h) => (y) => f(g(x))(h(y));
+const D2: Dovekies
 ```
 
 Combine two values, each transformed by its own function.
@@ -629,7 +643,7 @@ D2(add)(len)('abc')(inc)(38) // 3 + 39
 ### dickcissel
 
 ```ts
-const dickcissel: Dickcissel = D1;
+const dickcissel: Dickcissel
 ```
 
 The Dickcissel, by name. Identical to {@link D1}.
@@ -640,6 +654,10 @@ The Dickcissel, by name. Identical to {@link D1}.
 
 ```ts
 interface Dickcissel {
+  <X, Y, R, S>(
+    f: (x: X) => (y: Y) => (r: R) => S,
+  ): (x: X) => (y: Y) => <Z>(g: (z: Z) => R) => (z: Z) => S;
+}
 ```
 
 The Dickcissel — `D1`.
@@ -656,7 +674,7 @@ only its third argument.
 ### dove
 
 ```ts
-const dove: Dove = D;
+const dove: Dove
 ```
 
 The Dove, by name. Identical to {@link D}.
@@ -667,6 +685,8 @@ The Dove, by name. Identical to {@link D}.
 
 ```ts
 interface Dove {
+  <X, R, S>(f: (x: X) => (r: R) => S): (x: X) => <Y>(g: (y: Y) => R) => (y: Y) => S;
+}
 ```
 
 The Dove — `D`.
@@ -683,7 +703,7 @@ asserted in the law suite.
 ### dovekies
 
 ```ts
-const dovekies: Dovekies = D2;
+const dovekies: Dovekies
 ```
 
 The Dovekies, by name. Identical to {@link D2}.
@@ -694,6 +714,10 @@ The Dovekies, by name. Identical to {@link D2}.
 
 ```ts
 interface Dovekies {
+  <R, S, T>(
+    f: (r: R) => (s: S) => T,
+  ): <X>(g: (x: X) => R) => (x: X) => <Y>(h: (y: Y) => S) => (y: Y) => T;
+}
 ```
 
 The Dovekies — `D2`.
@@ -712,7 +736,7 @@ transformers coincide. The law suite asserts that.
 ### duplicate
 
 ```ts
-const duplicate: Warbler = W;
+const duplicate: Warbler
 ```
 
 Apply a curried binary function to the same argument twice. Identical to {@link W}.
@@ -722,7 +746,7 @@ Apply a curried binary function to the same argument twice. Identical to {@link 
 ### E
 
 ```ts
-const E: Eagle = (f) => (x) => (g) => (y) => (z) => f(x)(g(y)(z));
+const E: Eagle
 ```
 
 Apply a binary function whose second argument comes from another binary function.
@@ -732,7 +756,7 @@ Apply a binary function whose second argument comes from another binary function
 ### eagle
 
 ```ts
-const eagle: Eagle = E;
+const eagle: Eagle
 ```
 
 The Eagle, by name. Identical to {@link E}.
@@ -743,6 +767,10 @@ The Eagle, by name. Identical to {@link E}.
 
 ```ts
 interface Eagle {
+  <X, R, S>(
+    f: (x: X) => (r: R) => S,
+  ): (x: X) => <Y, Z>(g: (y: Y) => (z: Z) => R) => (y: Y) => (z: Z) => S;
+}
 ```
 
 The Eagle — `E`.
@@ -760,7 +788,7 @@ derivation is not typeable here.
 ### F
 
 ```ts
-const F: Finch = (a) => (b) => (f) => f(b)(a);
+const F: Finch
 ```
 
 Hold two values and apply a function to them reversed.
@@ -778,7 +806,7 @@ F('foo')('bar')(cat) // 'barfoo'
 ### finch
 
 ```ts
-const finch: Finch = F;
+const finch: Finch
 ```
 
 The Finch, by name. Identical to {@link F}.
@@ -789,6 +817,8 @@ The Finch, by name. Identical to {@link F}.
 
 ```ts
 interface Finch {
+  <A>(a: A): <B>(b: B) => <C>(f: (b: B) => (a: A) => C) => C;
+}
 ```
 
 The Finch — `F`.
@@ -805,7 +835,7 @@ the Vireo's mirror — `F ≡ C V` — which the law suite asserts.
 ### fix
 
 ```ts
-const fix: Sage = Y;
+const fix: Sage
 ```
 
 The fixed-point combinator. Identical to {@link Y}.
@@ -815,7 +845,7 @@ The fixed-point combinator. Identical to {@link Y}.
 ### flip
 
 ```ts
-const flip: Cardinal = C;
+const flip: Cardinal
 ```
 
 Flip a curried binary function's argument order. Identical to {@link C}.
@@ -825,7 +855,7 @@ Flip a curried binary function's argument order. Identical to {@link C}.
 ### G
 
 ```ts
-const G: Goldfinch = (f) => (g) => (x) => (y) => f(y)(g(x));
+const G: Goldfinch
 ```
 
 Combine an untouched argument with a transformed one, crosswise.
@@ -845,7 +875,7 @@ G(sub)(len)('abc')(10) // 10 - 3
 ### goldfinch
 
 ```ts
-const goldfinch: Goldfinch = G;
+const goldfinch: Goldfinch
 ```
 
 The Goldfinch, by name. Identical to {@link G}.
@@ -856,6 +886,8 @@ The Goldfinch, by name. Identical to {@link G}.
 
 ```ts
 interface Goldfinch {
+  <Y, R, S>(f: (y: Y) => (r: R) => S): <X>(g: (x: X) => R) => (x: X) => (y: Y) => S;
+}
 ```
 
 The Goldfinch — `G`.
@@ -874,7 +906,7 @@ projecting.
 ### H
 
 ```ts
-const H: Hummingbird = (f) => (a) => (b) => f(a)(b)(a);
+const H: Hummingbird
 ```
 
 Apply a ternary function with its first argument reused as the third.
@@ -894,7 +926,7 @@ H(between)(1)(2) // '1-2-1'
 ### hummingbird
 
 ```ts
-const hummingbird: Hummingbird = H;
+const hummingbird: Hummingbird
 ```
 
 The Hummingbird, by name. Identical to {@link H}.
@@ -905,6 +937,8 @@ The Hummingbird, by name. Identical to {@link H}.
 
 ```ts
 interface Hummingbird {
+  <A, B, C>(f: (a: A) => (b: B) => (a2: A) => C): (a: A) => (b: B) => C;
+}
 ```
 
 The Hummingbird — `H`.
@@ -922,7 +956,7 @@ positions, `H` duplicates across a gap.
 ### I
 
 ```ts
-const I: Idiot = (a) => a;
+const I: Idiot
 ```
 
 Return the argument unchanged.
@@ -940,7 +974,7 @@ I('same')  // 'same'
 ### identity
 
 ```ts
-const identity: Idiot = I;
+const identity: Idiot
 ```
 
 The identity function. Identical to {@link I}.
@@ -950,7 +984,7 @@ The identity function. Identical to {@link I}.
 ### idiot
 
 ```ts
-const idiot: Idiot = I;
+const idiot: Idiot
 ```
 
 The Idiot, by name. Identical to {@link I}.
@@ -961,6 +995,8 @@ The Idiot, by name. Identical to {@link I}.
 
 ```ts
 interface Idiot {
+  <A>(a: A): A;
+}
 ```
 
 The Idiot — `I`.
@@ -981,7 +1017,7 @@ Starling, Kestrel and Warbler all agree with each other.
 ### idiotOnceRemoved
 
 ```ts
-const idiotOnceRemoved: IdiotOnceRemoved = IStar;
+const idiotOnceRemoved: IdiotOnceRemoved
 ```
 
 The Idiot once removed, by name. Identical to {@link IStar}.
@@ -992,6 +1028,8 @@ The Idiot once removed, by name. Identical to {@link IStar}.
 
 ```ts
 interface IdiotOnceRemoved {
+  <A, B>(f: (a: A) => B): (a: A) => B;
+}
 ```
 
 The Idiot once removed — `I*`.
@@ -1010,7 +1048,7 @@ asserts, and it is what most languages call `apply`.
 ### IStar
 
 ```ts
-const IStar: IdiotOnceRemoved = (f) => (a) => f(a);
+const IStar: IdiotOnceRemoved
 ```
 
 Apply a function to a value.
@@ -1028,7 +1066,7 @@ IStar(inc)(41) // 42
 ### J
 
 ```ts
-const J: Jay = (f) => (x) => (y) => (z) => f(x)(f(z)(y));
+const J: Jay
 ```
 
 Apply a binary accumulating function twice, nested.
@@ -1046,7 +1084,7 @@ J(cat)('a')('b')('c') // 'a' + ('c' + 'b') = 'acb'
 ### jay
 
 ```ts
-const jay: Jay = J;
+const jay: Jay
 ```
 
 The Jay, by name. Identical to {@link J}.
@@ -1057,6 +1095,8 @@ The Jay, by name. Identical to {@link J}.
 
 ```ts
 interface Jay {
+  <A, B>(f: (a: A) => (b: B) => B): (x: A) => (y: B) => (z: A) => B;
+}
 ```
 
 The Jay — `J`.
@@ -1075,7 +1115,7 @@ That makes `f` an accumulating operation — exactly the shape of a fold step.
 ### K
 
 ```ts
-const K: Kestrel = (a) => () => a;
+const K: Kestrel
 ```
 
 Produce a function that ignores its argument and always returns `a`.
@@ -1094,7 +1134,7 @@ always42(null)       // 42
 ### kestrel
 
 ```ts
-const kestrel: Kestrel = K;
+const kestrel: Kestrel
 ```
 
 The Kestrel, by name. Identical to {@link K}.
@@ -1105,6 +1145,8 @@ The Kestrel, by name. Identical to {@link K}.
 
 ```ts
 interface Kestrel {
+  <A>(a: A): <B>(b: B) => A;
+}
 ```
 
 The Kestrel — `K`.
@@ -1129,7 +1171,7 @@ discarded argument is knowable from `a` alone.
 ### KI
 
 ```ts
-const KI: Kite = () => (b) => b;
+const KI: Kite
 ```
 
 Produce a function that ignores the first argument and returns the second.
@@ -1146,7 +1188,7 @@ KI('discarded')(42) // 42
 ### kite
 
 ```ts
-const kite: Kite = KI;
+const kite: Kite
 ```
 
 The Kite, by name. Identical to {@link KI}.
@@ -1157,6 +1199,8 @@ The Kite, by name. Identical to {@link KI}.
 
 ```ts
 interface Kite {
+  <A>(a: A): <B>(b: B) => B;
+}
 ```
 
 The Kite — `KI`.
@@ -1177,7 +1221,7 @@ bird whose implementation can be checked twice.
 ### L
 
 ```ts
-const L: Lark = (f) => (y) => f(y(y));
+const L: Lark
 ```
 
 Self-apply the second argument, then pass the result to the first.
@@ -1198,7 +1242,7 @@ L(inc)(five) // 6
 ### lark
 
 ```ts
-const lark: Lark = L;
+const lark: Lark
 ```
 
 The Lark, by name. Identical to {@link L}.
@@ -1209,6 +1253,8 @@ The Lark, by name. Identical to {@link L}.
 
 ```ts
 interface Lark {
+  <A, B>(f: (a: A) => B): (y: SelfApplicable<A>) => B;
+}
 ```
 
 The Lark — `L`.
@@ -1229,7 +1275,7 @@ useful when the self-applied argument bounds its own recursion.
 ### M
 
 ```ts
-const M: Mockingbird = (x) => x(x);
+const M: Mockingbird
 ```
 
 Apply a function to itself.
@@ -1251,7 +1297,7 @@ M(answer) // 42
 ### mockingbird
 
 ```ts
-const mockingbird: Mockingbird = M;
+const mockingbird: Mockingbird
 ```
 
 The Mockingbird, by name. Identical to {@link M}.
@@ -1262,6 +1308,8 @@ The Mockingbird, by name. Identical to {@link M}.
 
 ```ts
 interface Mockingbird {
+  <A>(x: SelfApplicable<A>): A;
+}
 ```
 
 The Mockingbird — `M`.
@@ -1291,7 +1339,7 @@ bounds its argument — which is exactly how the Sage bird uses it internally.
 ### O
 
 ```ts
-const O: Owl = (f) => (g) => g(f(g));
+const O: Owl
 ```
 
 Apply `f` to `g`, then `g` to the result.
@@ -1311,7 +1359,7 @@ O(pick)(show) // '41'
 ### on
 
 ```ts
-const on: Psi = psi;
+const on: Psi
 ```
 
 Combine two values on a shared projection. Identical to {@link psi}.
@@ -1321,7 +1369,7 @@ Combine two values on a shared projection. Identical to {@link psi}.
 ### owl
 
 ```ts
-const owl: Owl = O;
+const owl: Owl
 ```
 
 The Owl, by name. Identical to {@link O}.
@@ -1332,6 +1380,8 @@ The Owl, by name. Identical to {@link O}.
 
 ```ts
 interface Owl {
+  <A, B>(f: (g: (a: A) => B) => A): (g: (a: A) => B) => B;
+}
 ```
 
 The Owl — `O`.
@@ -1354,7 +1404,7 @@ company with the Mockingbird and the Sage.
 ### P
 
 ```ts
-const P: Psi = psi;
+const P: Psi
 ```
 
 The Psi bird, by symbol. Identical to {@link psi}.
@@ -1364,7 +1414,7 @@ The Psi bird, by symbol. Identical to {@link psi}.
 ### pair
 
 ```ts
-const pair: Vireo = V;
+const pair: Vireo
 ```
 
 Church-encoded pair. Identical to {@link V}.
@@ -1374,7 +1424,7 @@ Church-encoded pair. Identical to {@link V}.
 ### Phi
 
 ```ts
-const Phi: Phoenix = phoenix;
+const Phi: Phoenix
 ```
 
 The Phoenix, by symbol. Identical to {@link phoenix}.
@@ -1384,7 +1434,7 @@ The Phoenix, by symbol. Identical to {@link phoenix}.
 ### phoenix
 
 ```ts
-const phoenix: Phoenix = (f) => (g) => (h) => (a) => f(g(a))(h(a));
+const phoenix: Phoenix
 ```
 
 Apply two functions to one value and combine the results.
@@ -1407,6 +1457,8 @@ average([1, 2, 3, 4]) // 2.5
 
 ```ts
 interface Phoenix {
+  <B, C, D>(f: (b: B) => (c: C) => D): <A>(g: (a: A) => B) => (h: (a: A) => C) => (a: A) => D;
+}
 ```
 
 The Phoenix — `Φ`.
@@ -1429,7 +1481,7 @@ the first signature constrains it — it is first pinned when `h` arrives, and
 ### pipe2
 
 ```ts
-const pipe2: Queer = Q;
+const pipe2: Queer
 ```
 
 Left-to-right composition. Identical to {@link Q}.
@@ -1439,7 +1491,7 @@ Left-to-right composition. Identical to {@link Q}.
 ### psi
 
 ```ts
-const psi: Psi = (f) => (g) => (a1) => (a2) => f(g(a1))(g(a2));
+const psi: Psi
 ```
 
 Combine two values after mapping both through the same function.
@@ -1461,6 +1513,8 @@ byLength('aaa')('a') // 2
 
 ```ts
 interface Psi {
+  <B, C>(f: (b1: B) => (b2: B) => C): <A>(g: (a: A) => B) => (a1: A) => (a2: A) => C;
+}
 ```
 
 The Psi bird — `Ψ`.
@@ -1479,7 +1533,7 @@ is the bird behind almost every comparator you have ever written:
 ### Q
 
 ```ts
-const Q: Queer = (f) => (g) => (a) => g(f(a));
+const Q: Queer
 ```
 
 Compose two functions left to right.
@@ -1499,7 +1553,7 @@ Q(inc)(show)(41) // '42'
 ### Q1
 
 ```ts
-const Q1: Quixotic = (f) => (g) => (x) => f(x(g));
+const Q1: Quixotic
 ```
 
 Apply `x` to `g`, then `f` to the result.
@@ -1509,7 +1563,7 @@ Apply `x` to `g`, then `f` to the result.
 ### Q2
 
 ```ts
-const Q2: Quizzical = (f) => (g) => (x) => g(x(f));
+const Q2: Quizzical
 ```
 
 Apply `x` to `f`, then `g` to the result.
@@ -1519,7 +1573,7 @@ Apply `x` to `f`, then `g` to the result.
 ### Q3
 
 ```ts
-const Q3: Quirky = (f) => (g) => (x) => x(f(g));
+const Q3: Quirky
 ```
 
 Apply `f` to `g`, then `x` to the result.
@@ -1529,7 +1583,7 @@ Apply `f` to `g`, then `x` to the result.
 ### Q4
 
 ```ts
-const Q4: Quacky = (f) => (g) => (x) => x(g(f));
+const Q4: Quacky
 ```
 
 Apply `g` to `f`, then `x` to the result.
@@ -1539,7 +1593,7 @@ Apply `g` to `f`, then `x` to the result.
 ### quacky
 
 ```ts
-const quacky: Quacky = Q4;
+const quacky: Quacky
 ```
 
 The Quacky bird, by name. Identical to {@link Q4}.
@@ -1550,6 +1604,8 @@ The Quacky bird, by name. Identical to {@link Q4}.
 
 ```ts
 interface Quacky {
+  <F>(f: F): <R>(g: (f: F) => R) => <S>(x: (r: R) => S) => S;
+}
 ```
 
 The Quacky bird — `Q4`.
@@ -1567,7 +1623,7 @@ arrives first and each subsequent argument consumes what came before.
 ### queer
 
 ```ts
-const queer: Queer = Q;
+const queer: Queer
 ```
 
 The Queer bird, by name. Identical to {@link Q}.
@@ -1578,6 +1634,8 @@ The Queer bird, by name. Identical to {@link Q}.
 
 ```ts
 interface Queer {
+  <A, B>(f: (a: A) => B): <C>(g: (b: B) => C) => (a: A) => C;
+}
 ```
 
 The Queer bird — `Q`.
@@ -1597,7 +1655,7 @@ This is the shape most people mean by "pipe two functions together".
 ### quirky
 
 ```ts
-const quirky: Quirky = Q3;
+const quirky: Quirky
 ```
 
 The Quirky bird, by name. Identical to {@link Q3}.
@@ -1608,6 +1666,8 @@ The Quirky bird, by name. Identical to {@link Q3}.
 
 ```ts
 interface Quirky {
+  <G, R>(f: (g: G) => R): (g: G) => <S>(x: (r: R) => S) => S;
+}
 ```
 
 The Quirky bird — `Q3`.
@@ -1624,7 +1684,7 @@ The Quirky bird is the Queer bird with its arguments rotated.
 ### quixotic
 
 ```ts
-const quixotic: Quixotic = Q1;
+const quixotic: Quixotic
 ```
 
 The Quixotic bird, by name. Identical to {@link Q1}.
@@ -1635,6 +1695,8 @@ The Quixotic bird, by name. Identical to {@link Q1}.
 
 ```ts
 interface Quixotic {
+  <R, S>(f: (r: R) => S): <G>(g: G) => (x: (g: G) => R) => S;
+}
 ```
 
 The Quixotic bird — `Q1`.
@@ -1652,7 +1714,7 @@ argument is the function and the second is its input.
 ### quizzical
 
 ```ts
-const quizzical: Quizzical = Q2;
+const quizzical: Quizzical
 ```
 
 The Quizzical bird, by name. Identical to {@link Q2}.
@@ -1663,6 +1725,8 @@ The Quizzical bird, by name. Identical to {@link Q2}.
 
 ```ts
 interface Quizzical {
+  <F>(f: F): <R, S>(g: (r: R) => S) => (x: (f: F) => R) => S;
+}
 ```
 
 The Quizzical bird — `Q2`.
@@ -1679,7 +1743,7 @@ The Quixotic bird with the roles of the first two arguments exchanged:
 ### R
 
 ```ts
-const R: Robin = (a) => (f) => (b) => f(b)(a);
+const R: Robin
 ```
 
 Apply a binary function to arguments supplied out of order.
@@ -1697,7 +1761,7 @@ R('foo')(cat)('bar') // 'barfoo'
 ### robin
 
 ```ts
-const robin: Robin = R;
+const robin: Robin
 ```
 
 The Robin, by name. Identical to {@link R}.
@@ -1708,6 +1772,8 @@ The Robin, by name. Identical to {@link R}.
 
 ```ts
 interface Robin {
+  <A>(a: A): <B, C>(f: (b: B) => (a: A) => C) => (b: B) => C;
+}
 ```
 
 The Robin — `R`.
@@ -1727,7 +1793,7 @@ function with the arguments in the opposite order to the one they arrived in.
 ### S
 
 ```ts
-const S: Starling = (f) => (g) => (a) => f(a)(g(a));
+const S: Starling
 ```
 
 Apply `f` and `g` to the same argument, then apply the results.
@@ -1749,7 +1815,7 @@ addToSuccessor(20) // 41
 ### sage
 
 ```ts
-const sage: Sage = Y;
+const sage: Sage
 ```
 
 The Sage bird, by name. Identical to {@link Y}.
@@ -1760,6 +1826,8 @@ The Sage bird, by name. Identical to {@link Y}.
 
 ```ts
 interface Sage {
+  <A, B>(f: (rec: (a: A) => B) => (a: A) => B): (a: A) => B;
+}
 ```
 
 The Sage bird — `Y`.
@@ -1808,6 +1876,8 @@ mechanism, and `rec` never mentions itself inside its own body.
 
 ```ts
 interface SageSelf<A, B> {
+  (x: SageSelf<A, B>): (a: A) => B;
+}
 ```
 
 The self-applicable shape used by the Sage bird's fixed-point construction.
@@ -1819,6 +1889,8 @@ Applying it to itself produces the recursive function itself.
 
 ```ts
 interface SelfApplicable<A> {
+  (x: SelfApplicable<A>): A;
+}
 ```
 
 Recursive types for the hard forest.
@@ -1854,7 +1926,7 @@ expressible.
 ### starling
 
 ```ts
-const starling: Starling = S;
+const starling: Starling
 ```
 
 The Starling, by name. Identical to {@link S}.
@@ -1865,6 +1937,8 @@ The Starling, by name. Identical to {@link S}.
 
 ```ts
 interface Starling {
+  <A, B, C>(f: (a: A) => (b: B) => C): (g: (a: A) => B) => (a: A) => C;
+}
 ```
 
 The Starling — `S`.
@@ -1889,7 +1963,7 @@ against it. Hence all three sit on the first signature.
 ### T
 
 ```ts
-const T: Thrush = (a) => (f) => f(a);
+const T: Thrush
 ```
 
 Apply a function to a value, value first.
@@ -1906,7 +1980,7 @@ T(41)((n: number) => n + 1) // 42
 ### thrush
 
 ```ts
-const thrush: Thrush = T;
+const thrush: Thrush
 ```
 
 The Thrush, by name. Identical to {@link T}.
@@ -1917,6 +1991,8 @@ The Thrush, by name. Identical to {@link T}.
 
 ```ts
 interface Thrush {
+  <A>(a: A): <B>(f: (a: A) => B) => B;
+}
 ```
 
 The Thrush — `T`.
@@ -1937,7 +2013,7 @@ variadic `pipe` is just the Thrush iterated.
 ### turing
 
 ```ts
-const turing: Turing = U;
+const turing: Turing
 ```
 
 The Turing bird, by name. Identical to {@link U}.
@@ -1948,6 +2024,8 @@ The Turing bird, by name. Identical to {@link U}.
 
 ```ts
 interface Turing {
+  <A>(x: TuringSelf<A>): (y: (a: A) => A) => A;
+}
 ```
 
 The Turing bird — `U`.
@@ -1979,6 +2057,8 @@ bird {@link Y}, which is what you actually want for recursion.
 
 ```ts
 interface TuringSelf<A> {
+  (x: TuringSelf<A>): (y: (a: A) => A) => A;
+}
 ```
 
 The self-applicable shape used by the Turing bird, whose self-application is
@@ -1989,7 +2069,7 @@ followed by a further argument.
 ### U
 
 ```ts
-const U: Turing = (x) => (y) => y(x(x)(y));
+const U: Turing
 ```
 
 The Turing bird. Applied to itself it yields a fixed-point operator — which
@@ -2012,7 +2092,7 @@ U(stop)(inc) // 1
 ### V
 
 ```ts
-const V: Vireo = (a) => (b) => (f) => f(a)(b);
+const V: Vireo
 ```
 
 Build a pair as a function awaiting its consumer.
@@ -2031,7 +2111,7 @@ pair(KI) // 'two'
 ### vireo
 
 ```ts
-const vireo: Vireo = V;
+const vireo: Vireo
 ```
 
 The Vireo, by name. Identical to {@link V}.
@@ -2042,6 +2122,8 @@ The Vireo, by name. Identical to {@link V}.
 
 ```ts
 interface Vireo {
+  <A>(a: A): <B>(b: B) => <C>(f: (a: A) => (b: B) => C) => C;
+}
 ```
 
 The Vireo — `V`.
@@ -2060,7 +2142,7 @@ are asserted in the law suite.
 ### W
 
 ```ts
-const W: Warbler = (f) => (a) => f(a)(a);
+const W: Warbler
 ```
 
 Apply a curried binary function to the same argument twice.
@@ -2079,7 +2161,7 @@ double(21) // 42
 ### warbler
 
 ```ts
-const warbler: Warbler = W;
+const warbler: Warbler
 ```
 
 The Warbler, by name. Identical to {@link W}.
@@ -2090,6 +2172,8 @@ The Warbler, by name. Identical to {@link W}.
 
 ```ts
 interface Warbler {
+  <A, B>(f: (a: A) => (a2: A) => B): (a: A) => B;
+}
 ```
 
 The Warbler — `W`.
@@ -2111,7 +2195,7 @@ A>>` collapsed by supplying the same environment to both layers.
 ### warblerOnceRemoved
 
 ```ts
-const warblerOnceRemoved: WarblerOnceRemoved = WStar;
+const warblerOnceRemoved: WarblerOnceRemoved
 ```
 
 The Warbler once removed, by name. Identical to {@link WStar}.
@@ -2122,6 +2206,8 @@ The Warbler once removed, by name. Identical to {@link WStar}.
 
 ```ts
 interface WarblerOnceRemoved {
+  <A, B, C>(f: (a: A) => (b: B) => (b2: B) => C): (a: A) => (b: B) => C;
+}
 ```
 
 The Warbler once removed — `W*`.
@@ -2138,7 +2224,7 @@ untouched and the second is duplicated. `W* ≡ B W`, asserted in the law suite.
 ### WStar
 
 ```ts
-const WStar: WarblerOnceRemoved = (f) => (a) => (b) => f(a)(b)(b);
+const WStar: WarblerOnceRemoved
 ```
 
 Apply a ternary function with its second argument duplicated into the third.
@@ -2148,7 +2234,7 @@ Apply a ternary function with its second argument duplicated into the third.
 ### Y
 
 ```ts
-const Y: Sage = <A, B>(f: (rec: (a: A) => B) => (a: A) => B): ((a: A) => B) => {
+const Y: Sage
 ```
 
 Compute the fixed point of `f`, giving a recursive function with no name.
@@ -2203,6 +2289,252 @@ addThenShow(40, 2) // '42'
 
 ```ts
 interface Flow {
+  <A extends ReadonlyArray<unknown>, B>(ab: (...a: A) => B): (...a: A) => B;
+  <A extends ReadonlyArray<unknown>, B, C>(ab: (...a: A) => B, bc: (b: B) => C): (...a: A) => C;
+  <A extends ReadonlyArray<unknown>, B, C, D>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+  ): (...a: A) => D;
+  <A extends ReadonlyArray<unknown>, B, C, D, E>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+  ): (...a: A) => E;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+  ): (...a: A) => F;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+  ): (...a: A) => G;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+  ): (...a: A) => H;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+  ): (...a: A) => I;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+  ): (...a: A) => J;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+  ): (...a: A) => K;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+  ): (...a: A) => L;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+  ): (...a: A) => M;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+  ): (...a: A) => N;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N, O>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+  ): (...a: A) => O;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+  ): (...a: A) => P;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+  ): (...a: A) => Q;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+  ): (...a: A) => R;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+  ): (...a: A) => S;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+    st: (s: S) => T,
+  ): (...a: A) => T;
+  <A extends ReadonlyArray<unknown>, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U>(
+    ab: (...a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+    st: (s: S) => T,
+    tu: (t: T) => U,
+  ): (...a: A) => U;
+}
 ```
 
 Compose up to twenty functions into one, left to right.
@@ -2212,7 +2544,7 @@ Compose up to twenty functions into one, left to right.
 ### pipe
 
 ```ts
-const pipe: Pipe = (a: unknown, ...fns: ReadonlyArray<(x: unknown) => unknown>): never =>
+const pipe: Pipe
 ```
 
 Thread a value through a sequence of functions, left to right.
@@ -2233,6 +2565,260 @@ pipe(41, inc, show) // '42'
 
 ```ts
 interface Pipe {
+  <A>(a: A): A;
+  <A, B>(a: A, ab: (a: A) => B): B;
+  <A, B, C>(a: A, ab: (a: A) => B, bc: (b: B) => C): C;
+  <A, B, C, D>(a: A, ab: (a: A) => B, bc: (b: B) => C, cd: (c: C) => D): D;
+  <A, B, C, D, E>(a: A, ab: (a: A) => B, bc: (b: B) => C, cd: (c: C) => D, de: (d: D) => E): E;
+  <A, B, C, D, E, F>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+  ): F;
+  <A, B, C, D, E, F, G>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+  ): G;
+  <A, B, C, D, E, F, G, H>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+  ): H;
+  <A, B, C, D, E, F, G, H, I>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+  ): I;
+  <A, B, C, D, E, F, G, H, I, J>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+  ): J;
+  <A, B, C, D, E, F, G, H, I, J, K>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+  ): K;
+  <A, B, C, D, E, F, G, H, I, J, K, L>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+  ): L;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+  ): M;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+  ): N;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+  ): O;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+  ): P;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+  ): Q;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+  ): R;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+  ): S;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+    st: (s: S) => T,
+  ): T;
+  <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U>(
+    a: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+    qr: (q: Q) => R,
+    rs: (r: R) => S,
+    st: (s: S) => T,
+    tu: (t: T) => U,
+  ): U;
+}
 ```
 
 `pipe` and `flow` — left-to-right function application.
@@ -2270,7 +2856,7 @@ Both support up to twenty functions. Beyond that, nest a second `pipe`.
 
 | Export | Kind | Summary |
 | --- | --- | --- |
-| [`ap`](#ap) | const | Reader applicative application. |
+| [`ap`](#ap) | const | Apply a wrapped function to a wrapped value. |
 | [`filter`](#filter) | const | Discard the value unless it satisfies a predicate. |
 | [`flatMap`](#flatmap) | const | Chain a computation that itself may be absent. |
 | [`flatten`](#flatten) | const | Remove one level of nesting. |
@@ -2296,12 +2882,12 @@ Both support up to twenty functions. Beyond that, nest a second `pipe`.
 ### ap
 
 ```ts
-const ap: Starling = S;
+const ap: <A, B>(ff: Option<(a: A) => B>) => (fa: Option<A>) => Option<B>
 ```
 
-Reader applicative application. Identical to {@link S}.
+Apply a wrapped function to a wrapped value. Applicative `ap`.
 
-<sup>Source: [`src/birds/starling.ts`](https://github.com/phyter1/smullyan/blob/main/src/birds/starling.ts)</sup>
+<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
 
 ### filter
 
@@ -2326,7 +2912,7 @@ Chain a computation that itself may be absent. Monadic `bind`.
 ### flatten
 
 ```ts
-const flatten: <A>(fa: Option<Option<A>>) => Option<A> = (fa) =>
+const flatten: <A>(fa: Option<Option<A>>) => Option<A>
 ```
 
 Remove one level of nesting.
@@ -2336,7 +2922,7 @@ Remove one level of nesting.
 ### fromNullable
 
 ```ts
-const fromNullable: <A>(a: A | null | undefined) => Option<NonNullable<A>> = (a) =>
+const fromNullable: <A>(a: A | null | undefined) => Option<NonNullable<A>>
 ```
 
 Convert a nullable value. Both `null` and `undefined` become {@link none}.
@@ -2361,7 +2947,7 @@ Keep a value only if it satisfies a predicate.
 ### fromThrowable
 
 ```ts
-const fromThrowable: <A>(f: () => A) => Option<A> = (f) => {
+const fromThrowable: <A>(f: () => A) => Option<A>
 ```
 
 Run a function that may throw, capturing failure as {@link none}.
@@ -2373,7 +2959,7 @@ The error itself is discarded — use `Result.fromThrowable` when you need it.
 ### getOrElse
 
 ```ts
-const getOrElse: <A>(onNone: () => A) => (fa: Option<A>) => A = (onNone) => (fa) =>
+const getOrElse: <A>(onNone: () => A) => (fa: Option<A>) => A
 ```
 
 Extract the value, computing a fallback if absent.
@@ -2386,7 +2972,7 @@ which matters when producing it is expensive or throws.
 ### isNone
 
 ```ts
-const isNone: <A>(fa: Option<A>) => fa is None = <A>(fa: Option<A>): fa is None =>
+const isNone: <A>(fa: Option<A>) => fa is None
 ```
 
 Type guard narrowing to {@link None}.
@@ -2396,7 +2982,7 @@ Type guard narrowing to {@link None}.
 ### isSome
 
 ```ts
-const isSome: <A>(fa: Option<A>) => fa is Some<A> = <A>(fa: Option<A>): fa is Some<A> =>
+const isSome: <A>(fa: Option<A>) => fa is Some<A>
 ```
 
 Type guard narrowing to {@link Some}.
@@ -2406,7 +2992,7 @@ Type guard narrowing to {@link Some}.
 ### map
 
 ```ts
-const map: <A, B>(f: (a: A) => B) => (fa: Option<A>) => Option<B> = (f) => (fa) =>
+const map: <A, B>(f: (a: A) => B) => (fa: Option<A>) => Option<B>
 ```
 
 Apply a function to the value if present. Functor `map`.
@@ -2430,7 +3016,7 @@ Takes the absent branch first, matching the declaration order of
 ### none
 
 ```ts
-const none: Option<never> = { _tag: 'None' };
+const none: Option<never>
 ```
 
 The absent value.
@@ -2444,6 +3030,8 @@ so there is nothing to allocate per use.
 
 ```ts
 interface None {
+  readonly _tag: 'None';
+}
 ```
 
 The absent case. Carries no payload.
@@ -2453,7 +3041,7 @@ The absent case. Carries no payload.
 ### Option
 
 ```ts
-type Option<A> = Some<A> | None;
+type Option<A> = Some<A> | None
 ```
 
 A value that may be absent.
@@ -2473,7 +3061,7 @@ Fall back to another `Option` if absent.
 ### sequence
 
 ```ts
-const sequence: <A>(fas: ReadonlyArray<Option<A>>) => Option<ReadonlyArray<A>> = (fas) => {
+const sequence: <A>(fas: ReadonlyArray<Option<A>>) => Option<ReadonlyArray<A>>
 ```
 
 Turn a list of `Option`s into an `Option` of a list.
@@ -2486,7 +3074,7 @@ short-circuits on the first `None`.
 ### some
 
 ```ts
-const some: <A>(value: A) => Option<A> = (value) => ({ _tag: 'Some', value });
+const some: <A>(value: A) => Option<A>
 ```
 
 Wrap a present value.
@@ -2497,6 +3085,9 @@ Wrap a present value.
 
 ```ts
 interface Some<A> {
+  readonly _tag: 'Some';
+  readonly value: A;
+}
 ```
 
 `Option<A>` — a value that may be absent.
@@ -2539,7 +3130,7 @@ interfaces because those types are part of their documented identity
 ### toNullable
 
 ```ts
-const toNullable: <A>(fa: Option<A>) => A | null = (fa) => (isSome(fa) ? fa.value : null);
+const toNullable: <A>(fa: Option<A>) => A | null
 ```
 
 Collapse to `null` when absent.
@@ -2549,7 +3140,7 @@ Collapse to `null` when absent.
 ### toUndefined
 
 ```ts
-const toUndefined: <A>(fa: Option<A>) => A | undefined = (fa) =>
+const toUndefined: <A>(fa: Option<A>) => A | undefined
 ```
 
 Collapse to `undefined` when absent.
@@ -2560,6 +3151,8 @@ Collapse to `undefined` when absent.
 
 ```ts
 const traverse: <A, B>(
+  f: (a: A) => Option<B>,
+) => (as: ReadonlyArray<A>) => Option<ReadonlyArray<B>>
 ```
 
 Map each element to an `Option`, then {@link sequence}.
@@ -2570,40 +3163,42 @@ Map each element to an `Option`, then {@link sequence}.
 
 | Export | Kind | Summary |
 | --- | --- | --- |
-| [`ap`](#ap) | const | Reader applicative application. |
+| [`ap`](#ap) | const | Apply a wrapped function to a wrapped value. |
 | [`err`](#err) | const | Wrap a failure. |
 | [`Err`](#err) | interface | The failure case. |
-| [`flatMap`](#flatmap) | const | Chain a computation that itself may be absent. |
+| [`flatMap`](#flatmap) | const | Chain a computation that may itself fail. |
 | [`flatten`](#flatten) | const | Remove one level of nesting. |
-| [`fromNullable`](#fromnullable) | const | Convert a nullable value. |
-| [`fromThrowable`](#fromthrowable) | const | Run a function that may throw, capturing failure as {@link none}. |
-| [`getOrElse`](#getorelse) | const | Extract the value, computing a fallback if absent. |
+| [`fromNullable`](#fromnullable) | const | Convert a nullable value, using `onNullish` for the failure case. |
+| [`fromThrowable`](#fromthrowable) | const | Run a function that may throw, capturing the thrown value. |
+| [`getOrElse`](#getorelse) | const | Extract the success value, computing a fallback from the error. |
 | [`isErr`](#iserr) | const | Type guard narrowing to {@link Err}. |
 | [`isOk`](#isok) | const | Type guard narrowing to {@link Ok}. |
-| [`map`](#map) | const | Apply a function to the value if present. |
+| [`map`](#map) | const | Apply a function to the success value. |
 | [`mapErr`](#maperr) | const | Apply a function to the failure value. |
 | [`match`](#match) | const | Exhaustively handle both cases. |
 | [`ok`](#ok) | const | Wrap a success. |
 | [`Ok`](#ok) | interface | `Result<E, A>` — a computation that either succeeded with `A` or failed with `E`. |
-| [`orElse`](#orelse) | const | Fall back to another `Option` if absent. |
+| [`orElse`](#orelse) | const | Fall back to another `Result` on failure. |
 | [`Result`](#result) | type | A computation that either succeeded with `A` or failed with `E`. |
-| [`sequence`](#sequence) | const | Turn a list of `Option`s into an `Option` of a list. |
-| [`traverse`](#traverse) | const | Map each element to an `Option`, then {@link sequence}. |
+| [`sequence`](#sequence) | const | Turn a list of `Result`s into a `Result` of a list. |
+| [`traverse`](#traverse) | const | Map each element to a `Result`, then {@link sequence}. |
 
 ### ap
 
 ```ts
-const ap: Starling = S;
+const ap: <F, A, B>(
+  ff: Result<F, (a: A) => B>,
+) => <E>(fa: Result<E, A>) => Result<E | F, B>
 ```
 
-Reader applicative application. Identical to {@link S}.
+Apply a wrapped function to a wrapped value. Fails on the FIRST error.
 
-<sup>Source: [`src/birds/starling.ts`](https://github.com/phyter1/smullyan/blob/main/src/birds/starling.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### err
 
 ```ts
-const err: <E>(error: E) => Result<E, never> = (error) => ({ _tag: 'Err', error });
+const err: <E>(error: E) => Result<E, never>
 ```
 
 Wrap a failure.
@@ -2614,6 +3209,9 @@ Wrap a failure.
 
 ```ts
 interface Err<E> {
+  readonly _tag: 'Err';
+  readonly error: E;
+}
 ```
 
 The failure case.
@@ -2623,67 +3221,77 @@ The failure case.
 ### flatMap
 
 ```ts
-const flatMap: <A, B>(f: (a: A) => Option<B>) => (fa: Option<A>) => Option<B>
+const flatMap: <A, F, B>(
+  f: (a: A) => Result<F, B>,
+) => <E>(fa: Result<E, A>) => Result<E | F, B>
 ```
 
-Chain a computation that itself may be absent. Monadic `bind`.
+Chain a computation that may itself fail.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+The error types union rather than being forced to match, so a pipeline can
+accumulate distinct failure modes without a common base type.
+
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### flatten
 
 ```ts
-const flatten: <A>(fa: Option<Option<A>>) => Option<A> = (fa) =>
+const flatten: <E, F, A>(fa: Result<E, Result<F, A>>) => Result<E | F, A>
 ```
 
 Remove one level of nesting.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### fromNullable
 
 ```ts
-const fromNullable: <A>(a: A | null | undefined) => Option<NonNullable<A>> = (a) =>
+const fromNullable: <E, A>(
+  onNullish: () => E,
+) => (a: A | null | undefined) => Result<E, NonNullable<A>>
 ```
 
-Convert a nullable value. Both `null` and `undefined` become {@link none}.
+Convert a nullable value, using `onNullish` for the failure case.
 
-@example
-```ts
-fromNullable(document.getElementById('x')) // Option<HTMLElement>
-```
-
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### fromThrowable
 
 ```ts
-const fromThrowable: <A>(f: () => A) => Option<A> = (f) => {
+const fromThrowable: <E, A>(f: () => A, onThrow: (e: unknown) => E) => Result<E, A>
 ```
 
-Run a function that may throw, capturing failure as {@link none}.
+Run a function that may throw, capturing the thrown value.
 
-The error itself is discarded — use `Result.fromThrowable` when you need it.
+JavaScript lets you `throw` anything, so what arrives in a `catch` is
+genuinely `unknown` — not `Error`. Rather than lie about that with a cast,
+this takes an `onThrow` mapper and makes you decide. That is the honest
+signature, and it is why there is no zero-argument overload.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+@example
+```ts
+const parsed = fromThrowable(
+  () => JSON.parse(input) as unknown,
+  (e) => (e instanceof Error ? e.message : 'unknown parse failure'),
+)
+```
+
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### getOrElse
 
 ```ts
-const getOrElse: <A>(onNone: () => A) => (fa: Option<A>) => A = (onNone) => (fa) =>
+const getOrElse: <E, A>(onErr: (e: E) => A) => (fa: Result<E, A>) => A
 ```
 
-Extract the value, computing a fallback if absent.
+Extract the success value, computing a fallback from the error.
 
-The fallback is a THUNK so it is not evaluated when the value is present —
-which matters when producing it is expensive or throws.
-
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### isErr
 
 ```ts
-const isErr: <E, A>(fa: Result<E, A>) => fa is Err<E> = <E, A>(
+const isErr: <E, A>(fa: Result<E, A>) => fa is Err<E>
 ```
 
 Type guard narrowing to {@link Err}.
@@ -2693,7 +3301,7 @@ Type guard narrowing to {@link Err}.
 ### isOk
 
 ```ts
-const isOk: <E, A>(fa: Result<E, A>) => fa is Ok<A> = <E, A>(
+const isOk: <E, A>(fa: Result<E, A>) => fa is Ok<A>
 ```
 
 Type guard narrowing to {@link Ok}.
@@ -2703,12 +3311,12 @@ Type guard narrowing to {@link Ok}.
 ### map
 
 ```ts
-const map: <A, B>(f: (a: A) => B) => (fa: Option<A>) => Option<B> = (f) => (fa) =>
+const map: <A, B>(f: (a: A) => B) => <E>(fa: Result<E, A>) => Result<E, B>
 ```
 
-Apply a function to the value if present. Functor `map`.
+Apply a function to the success value. Failures pass through untouched.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### mapErr
 
@@ -2723,21 +3331,17 @@ Apply a function to the failure value. Successes pass through untouched.
 ### match
 
 ```ts
-const match: <A, B>(onNone: () => B, onSome: (a: A) => B) => (fa: Option<A>) => B
+const match: <E, A, B>(onErr: (e: E) => B, onOk: (a: A) => B) => (fa: Result<E, A>) => B
 ```
 
-Exhaustively handle both cases.
+Exhaustively handle both cases. Failure branch first, as in `Option.match`.
 
-Takes the absent branch first, matching the declaration order of
-`Option<A> = Some<A> | None` read as "failure then success" — the same order
-`Result.match` uses, so the two are visually consistent.
-
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### ok
 
 ```ts
-const ok: <A>(value: A) => Result<never, A> = (value) => ({ _tag: 'Ok', value });
+const ok: <A>(value: A) => Result<never, A>
 ```
 
 Wrap a success.
@@ -2748,6 +3352,9 @@ Wrap a success.
 
 ```ts
 interface Ok<A> {
+  readonly _tag: 'Ok';
+  readonly value: A;
+}
 ```
 
 `Result<E, A>` — a computation that either succeeded with `A` or failed
@@ -2806,17 +3413,19 @@ loudly under the same mistake. Same bug, opposite volume.
 ### orElse
 
 ```ts
-const orElse: <A>(onNone: () => Option<A>) => (fa: Option<A>) => Option<A>
+const orElse: <E, F, A>(
+  onErr: (e: E) => Result<F, A>,
+) => (fa: Result<E, A>) => Result<F, A>
 ```
 
-Fall back to another `Option` if absent.
+Fall back to another `Result` on failure.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### Result
 
 ```ts
-type Result<E, A> = Ok<A> | Err<E>;
+type Result<E, A> = Ok<A> | Err<E>
 ```
 
 A computation that either succeeded with `A` or failed with `E`.
@@ -2826,37 +3435,40 @@ A computation that either succeeded with `A` or failed with `E`.
 ### sequence
 
 ```ts
-const sequence: <A>(fas: ReadonlyArray<Option<A>>) => Option<ReadonlyArray<A>> = (fas) => {
+const sequence: <E, A>(fas: ReadonlyArray<Result<E, A>>) => Result<E, ReadonlyArray<A>>
 ```
 
-Turn a list of `Option`s into an `Option` of a list.
+Turn a list of `Result`s into a `Result` of a list.
 
-Absent if ANY element is absent — the standard applicative sequence, and it
-short-circuits on the first `None`.
+Fails with the FIRST error and short-circuits. If you need every error, map
+to a validation type that accumulates — this is the monadic sequence, and
+short-circuiting is what makes it monadic.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ### traverse
 
 ```ts
-const traverse: <A, B>(
+const traverse: <E, A, B>(
+  f: (a: A) => Result<E, B>,
+) => (as: ReadonlyArray<A>) => Result<E, ReadonlyArray<B>>
 ```
 
-Map each element to an `Option`, then {@link sequence}.
+Map each element to a `Result`, then {@link sequence}.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/result/result.ts`](https://github.com/phyter1/smullyan/blob/main/src/result/result.ts)</sup>
 
 ## `smullyan/task`
 
 | Export | Kind | Summary |
 | --- | --- | --- |
 | [`all`](#all) | const | Run tasks CONCURRENTLY, collecting every result. |
-| [`ap`](#ap) | const | Reader applicative application. |
-| [`flatMap`](#flatmap) | const | Chain a computation that itself may be absent. |
+| [`ap`](#ap) | const | Run two tasks CONCURRENTLY and apply the first's function to the second's value. |
+| [`flatMap`](#flatmap) | const | Chain an asynchronous computation. |
 | [`fromPromise`](#frompromise) | const | Wrap an existing promise. |
 | [`fromSync`](#fromsync) | const | Lift a synchronous function into a `Task`. |
-| [`map`](#map) | const | Apply a function to the value if present. |
-| [`of`](#of) | const | A reader that ignores the environment and returns a constant. |
+| [`map`](#map) | const | Apply a function to the eventual value. |
+| [`of`](#of) | const | Lift a plain value into a `Task`. |
 | [`sequential`](#sequential) | const | Run tasks in SEQUENCE, each starting only after the previous settles. |
 | [`Task`](#task) | type | `Task<A>` — an asynchronous computation that has not started yet. |
 | [`TaskResult`](#taskresult) | type | An asynchronous computation that may fail with `E`. |
@@ -2865,7 +3477,7 @@ Map each element to an `Option`, then {@link sequence}.
 ### all
 
 ```ts
-const all: <A>(tasks: ReadonlyArray<Task<A>>) => Task<ReadonlyArray<A>> = (tasks) => () =>
+const all: <A>(tasks: ReadonlyArray<Task<A>>) => Task<ReadonlyArray<A>>
 ```
 
 Run tasks CONCURRENTLY, collecting every result.
@@ -2875,27 +3487,32 @@ Run tasks CONCURRENTLY, collecting every result.
 ### ap
 
 ```ts
-const ap: Starling = S;
+const ap: <A, B>(ff: Task<(a: A) => B>) => (fa: Task<A>) => Task<B>
 ```
 
-Reader applicative application. Identical to {@link S}.
+Run two tasks CONCURRENTLY and apply the first's function to the second's
+value.
 
-<sup>Source: [`src/birds/starling.ts`](https://github.com/phyter1/smullyan/blob/main/src/birds/starling.ts)</sup>
+Contrast {@link flatMap}, which is necessarily sequential because the second
+task depends on the first's result. `ap` has no such dependency, so running
+in sequence would waste the parallelism for nothing.
+
+<sup>Source: [`src/task/task.ts`](https://github.com/phyter1/smullyan/blob/main/src/task/task.ts)</sup>
 
 ### flatMap
 
 ```ts
-const flatMap: <A, B>(f: (a: A) => Option<B>) => (fa: Option<A>) => Option<B>
+const flatMap: <A, B>(f: (a: A) => Task<B>) => (fa: Task<A>) => Task<B>
 ```
 
-Chain a computation that itself may be absent. Monadic `bind`.
+Chain an asynchronous computation.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/task/task.ts`](https://github.com/phyter1/smullyan/blob/main/src/task/task.ts)</sup>
 
 ### fromPromise
 
 ```ts
-const fromPromise: <A>(f: () => Promise<A>) => Task<A> = (f) => f;
+const fromPromise: <A>(f: () => Promise<A>) => Task<A>
 ```
 
 Wrap an existing promise.
@@ -2908,7 +3525,7 @@ defeat the purpose: it would already be running.
 ### fromSync
 
 ```ts
-const fromSync: <A>(f: () => A) => Task<A> = (f) => () => Promise.resolve(f());
+const fromSync: <A>(f: () => A) => Task<A>
 ```
 
 Lift a synchronous function into a `Task`.
@@ -2918,24 +3535,22 @@ Lift a synchronous function into a `Task`.
 ### map
 
 ```ts
-const map: <A, B>(f: (a: A) => B) => (fa: Option<A>) => Option<B> = (f) => (fa) =>
+const map: <A, B>(f: (a: A) => B) => (fa: Task<A>) => Task<B>
 ```
 
-Apply a function to the value if present. Functor `map`.
+Apply a function to the eventual value.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+<sup>Source: [`src/task/task.ts`](https://github.com/phyter1/smullyan/blob/main/src/task/task.ts)</sup>
 
 ### of
 
 ```ts
-const of: <R, A>(a: A) => Reader<R, A> = (a) => () => a;
+const of: <A>(a: A) => Task<A>
 ```
 
-A reader that ignores the environment and returns a constant.
+Lift a plain value into a `Task`.
 
-This is the Kestrel: `of ≡ K`.
-
-<sup>Source: [`src/reader/reader.ts`](https://github.com/phyter1/smullyan/blob/main/src/reader/reader.ts)</sup>
+<sup>Source: [`src/task/task.ts`](https://github.com/phyter1/smullyan/blob/main/src/task/task.ts)</sup>
 
 ### sequential
 
@@ -2950,7 +3565,7 @@ Run tasks in SEQUENCE, each starting only after the previous settles.
 ### Task
 
 ```ts
-type Task<A> = () => Promise<A>;
+type Task<A> = () => Promise<A>
 ```
 
 `Task<A>` — an asynchronous computation that has not started yet.
@@ -2987,7 +3602,7 @@ rather than hidden in a rejected promise that no signature mentions.
 ### TaskResult
 
 ```ts
-type TaskResult<E, A> = Task<Result<E, A>>;
+type TaskResult<E, A> = Task<Result<E, A>>
 ```
 
 An asynchronous computation that may fail with `E`.
@@ -3013,13 +3628,13 @@ genuinely `unknown`.
 
 | Export | Kind | Summary |
 | --- | --- | --- |
-| [`ap`](#ap) | const | Reader applicative application. |
+| [`ap`](#ap) | const | Apply a wrapped function to a wrapped value. |
 | [`ask`](#ask) | const | Retrieve the environment itself. |
 | [`asks`](#asks) | const | Retrieve a projection of the environment. |
-| [`flatMap`](#flatmap) | const | Chain a computation that itself may be absent. |
+| [`flatMap`](#flatmap) | const | Chain a computation that also needs the environment. |
 | [`flatten`](#flatten) | const | Remove one level of nesting. |
 | [`local`](#local) | const | Run a reader in a DERIVED environment. |
-| [`map`](#map) | const | Apply a function to the value if present. |
+| [`map`](#map) | const | Apply a function to the result. |
 | [`of`](#of) | const | A reader that ignores the environment and returns a constant. |
 | [`Reader`](#reader) | type | `Reader<R, A>` — a computation awaiting an environment `R`. |
 | [`run`](#run) | const | Supply the environment and get the result. |
@@ -3027,17 +3642,19 @@ genuinely `unknown`.
 ### ap
 
 ```ts
-const ap: Starling = S;
+const ap: <R, A, B>(ff: Reader<R, (a: A) => B>) => (fa: Reader<R, A>) => Reader<R, B>
 ```
 
-Reader applicative application. Identical to {@link S}.
+Apply a wrapped function to a wrapped value.
 
-<sup>Source: [`src/birds/starling.ts`](https://github.com/phyter1/smullyan/blob/main/src/birds/starling.ts)</sup>
+This is the Starling: `ap ≡ S`.
+
+<sup>Source: [`src/reader/reader.ts`](https://github.com/phyter1/smullyan/blob/main/src/reader/reader.ts)</sup>
 
 ### ask
 
 ```ts
-const ask: <R>() => Reader<R, R> = () => (r) => r;
+const ask: <R>() => Reader<R, R>
 ```
 
 Retrieve the environment itself.
@@ -3049,7 +3666,7 @@ Extensionally the identity function; named for intent.
 ### asks
 
 ```ts
-const asks: <R, A>(f: (r: R) => A) => Reader<R, A> = (f) => f;
+const asks: <R, A>(f: (r: R) => A) => Reader<R, A>
 ```
 
 Retrieve a projection of the environment.
@@ -3059,22 +3676,27 @@ Retrieve a projection of the environment.
 ### flatMap
 
 ```ts
-const flatMap: <A, B>(f: (a: A) => Option<B>) => (fa: Option<A>) => Option<B>
+const flatMap: <R, A, B>(f: (a: A) => Reader<R, B>) => (fa: Reader<R, A>) => Reader<R, B>
 ```
 
-Chain a computation that itself may be absent. Monadic `bind`.
+Chain a computation that also needs the environment.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+Both the outer and inner reader receive the SAME `r` — which is exactly what
+makes this dependency injection rather than mere composition.
+
+<sup>Source: [`src/reader/reader.ts`](https://github.com/phyter1/smullyan/blob/main/src/reader/reader.ts)</sup>
 
 ### flatten
 
 ```ts
-const flatten: <A>(fa: Option<Option<A>>) => Option<A> = (fa) =>
+const flatten: <R, A>(ffa: Reader<R, Reader<R, A>>) => Reader<R, A>
 ```
 
 Remove one level of nesting.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+This is the Warbler: `flatten ≡ W`.
+
+<sup>Source: [`src/reader/reader.ts`](https://github.com/phyter1/smullyan/blob/main/src/reader/reader.ts)</sup>
 
 ### local
 
@@ -3100,17 +3722,19 @@ const inApp: Reader<App, string> = local((app: App) => app.db)(withDb)
 ### map
 
 ```ts
-const map: <A, B>(f: (a: A) => B) => (fa: Option<A>) => Option<B> = (f) => (fa) =>
+const map: <A, B>(f: (a: A) => B) => <R>(fa: Reader<R, A>) => Reader<R, B>
 ```
 
-Apply a function to the value if present. Functor `map`.
+Apply a function to the result.
 
-<sup>Source: [`src/option/option.ts`](https://github.com/phyter1/smullyan/blob/main/src/option/option.ts)</sup>
+This is the Bluebird: `map ≡ B`.
+
+<sup>Source: [`src/reader/reader.ts`](https://github.com/phyter1/smullyan/blob/main/src/reader/reader.ts)</sup>
 
 ### of
 
 ```ts
-const of: <R, A>(a: A) => Reader<R, A> = (a) => () => a;
+const of: <R, A>(a: A) => Reader<R, A>
 ```
 
 A reader that ignores the environment and returns a constant.
@@ -3122,7 +3746,7 @@ This is the Kestrel: `of ≡ K`.
 ### Reader
 
 ```ts
-type Reader<R, A> = (r: R) => A;
+type Reader<R, A> = (r: R) => A
 ```
 
 `Reader<R, A>` — a computation awaiting an environment `R`.
@@ -3163,7 +3787,7 @@ decode.
 ### run
 
 ```ts
-const run: <R>(r: R) => <A>(fa: Reader<R, A>) => A = (r) => (fa) => fa(r);
+const run: <R>(r: R) => <A>(fa: Reader<R, A>) => A
 ```
 
 Supply the environment and get the result.
