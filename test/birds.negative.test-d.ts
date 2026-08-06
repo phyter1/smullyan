@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 
-import { B } from '../src/birds/index';
+import { B, C, I } from '../src/birds/index';
 
 const inc = (n: number) => n + 1;
 const show = (n: number) => String(n);
@@ -50,5 +50,30 @@ describe('B — NEGATIVE type tests', () => {
     // @ts-expect-error the result is string, so assigning it to number must fail
     const n: number = r;
     void n;
+  });
+});
+
+describe('documented type-system boundaries', () => {
+  // These assertions record where TypeScript's type system gives out. They are
+  // not bugs in smullyan — each identity below is TRUE and holds at runtime.
+  // The @ts-expect-error directives assert that the compiler CANNOT express
+  // them, so if a future TypeScript release gains the necessary expressiveness
+  // these tests fail loudly and the boundary can be revisited.
+
+  it('B B B is not typeable, though B1 ≡ B B B holds at runtime', () => {
+    // Passing B to itself requires instantiating a generic combinator at a
+    // polytype — higher-rank polymorphism, which TypeScript lacks. Explicit
+    // type arguments do not rescue it: the compiler reports that "'B' could be
+    // instantiated with an arbitrary type which could be unrelated to 'number'".
+    // @ts-expect-error higher-rank instantiation is not supported
+    void B(B)(B);
+  });
+
+  it('C I requires explicit instantiation', () => {
+    // I must be instantiated at a FUNCTION type for the Cardinal to accept it,
+    // and TypeScript will not infer that from the argument position alone.
+    // Supplying the type arguments explicitly works — see aviary.test.ts.
+    // @ts-expect-error cannot infer that I instantiates at a function type
+    void C(I);
   });
 });
