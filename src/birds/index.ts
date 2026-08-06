@@ -58,3 +58,14 @@ export { E, eagle, type Eagle } from './eagle';
 export { IStar, idiotOnceRemoved, apply, type IdiotOnceRemoved } from './idiot-once-removed';
 export { WStar, warblerOnceRemoved, type WarblerOnceRemoved } from './warbler-once-removed';
 export { CStar, cardinalOnceRemoved, type CardinalOnceRemoved } from './cardinal-once-removed';
+
+// --- The hard forest -------------------------------------------------------
+// Five birds involving self-application, none of which are typeable in a
+// simply-typed lambda calculus. See self-application.ts for how TypeScript's
+// lazily-resolved recursive interfaces get through, and what that costs.
+export type { SelfApplicable, TuringSelf, SageSelf } from './self-application';
+export { M, mockingbird, type Mockingbird } from './mockingbird';
+export { L, lark, type Lark } from './lark';
+export { O, owl, type Owl } from './owl';
+export { U, turing, type Turing } from './turing';
+export { Y, sage, fix, type Sage } from './sage';
