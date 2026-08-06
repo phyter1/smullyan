@@ -27,7 +27,7 @@ These are decided, not open questions:
 | Bundler          | **tsdown** (rolldown; native `.d.ts` via oxc-transform)                                |
 | Coverage         | 100% lines/branches/functions/statements, enforced as a hard gate                      |
 | Secrets          | gitleaks (pre-commit + CI)                                                             |
-| Deps             | Snyk (fail-soft until `SNYK_TOKEN` lands), OSV-Scanner, Renovate                       |
+| Deps             | OSV-Scanner, Renovate (Snyk removed - see §8.2)                                        |
 | Supply chain     | npm provenance, OIDC trusted publishing, CodeQL, OpenSSF Scorecard, SHA-pinned actions |
 
 Explicitly **not** used: ESLint, Prettier.
@@ -252,7 +252,7 @@ compiler surface here rather than in a consumer's build.
 - **quality** — format check, lint (type-aware), typecheck
 - **test** — Vitest + 100% coverage gate + law tests
 - **types** — type-test matrix across TS versions
-- **security** — gitleaks (full history), Snyk `test` + `monitor`, OSV-Scanner,
+- **security** — gitleaks (full history), OSV-Scanner, dependency-review,
   CodeQL, OpenSSF Scorecard
 - **build** — tsup build, then verify the emitted `.d.ts` against a consumer smoke test
   under both `node16` and `bundler` module resolution
@@ -294,11 +294,40 @@ code, so they go in before there's code to shape.
 oxfmt is at v0.60 and still labelled beta. Low risk for a formatter — worst case is
 cosmetic churn on a future upgrade. Recorded as a known accepted risk.
 
-### 8.2 Snyk token not yet present
+### 8.2 Snyk removed — incompatible with pnpm 11, and redundant here
 
-The Snyk job ships written but fail-soft: it skips cleanly when `SNYK_TOKEN` is absent
-and activates automatically once the secret is added, with no code change. OSV-Scanner,
-CodeQL, gitleaks, and Scorecard need no secret and run from day one.
+Snyk was wired in, a token was issued, and it was then removed after it proved unable to
+say anything true about this repository. Recorded so the decision is not revisited blind:
+
+1. **Snyk cannot parse pnpm 11's lockfile.** pnpm 11.20 writes a MULTI-DOCUMENT YAML
+   lockfile (two `---` documents, each with `lockfileVersion: '9.0'`, the second holding
+   `settings:`). Snyk's parser expects one document and fails with
+   `expected a single document in the stream, but found more`.
+2. **npm cannot generate a substitute lockfile.** `npm install --package-lock-only`
+   crashes on this dependency tree with
+   `TypeError: Cannot read properties of null (reading 'matches')` at
+   `@npmcli/arborist/lib/node.js:1183` — on npm 11.12.1 and 11.17.0, with and without
+   `--legacy-peer-deps`.
+3. **Without a lockfile, Snyk reports a false green.** `snyk test --file=package.json`
+   exits 0 with "no vulnerable paths found" while `--print-deps` shows the entire scanned
+   tree as `smullyan @ 0.0.0` — zero dependencies. A scan that reports clean because it
+   scanned nothing is worse than no scan, and `continue-on-error: true` hid this for a
+   full run.
+
+Independently of the breakage, Snyk was redundant: **OSV-Scanner parses `pnpm-lock.yaml`
+natively**, queries the same advisory databases, needs no account or token, and passes
+today. This library has ZERO runtime dependencies, so everything Snyk would scan is a
+devDependency that never reaches a consumer.
+
+Semgrep was considered as a replacement and rejected as a category error — Semgrep is
+SAST (source patterns), Snyk here was SCA (dependency CVEs), and the SCA role is already
+filled. Should a second SAST ever be wanted alongside CodeQL, use **Opengrep** (LGPL-2.1,
+vendor-consortium governed) rather than Semgrep CE, whose maintained rules carry the
+Semgrep Rules License v1.0 (internal, non-competing, non-SaaS only) — the same class of
+restriction that got `gitleaks-action` rejected.
+
+Revisit when: this library grows a genuine runtime dependency, or Snyk ships pnpm 11
+lockfile support. The `SNYK_TOKEN` secret can be revoked.
 
 ### 8.3 `fnctnl` local directory vs `smullyan` package name
 
