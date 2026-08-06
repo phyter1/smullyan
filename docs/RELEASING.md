@@ -81,3 +81,56 @@ is signed by Sigstore and recorded in the public Rekor transparency log.
 
 Provenance proves _where and how_ the tarball was built. It does not attest that
 the code is safe.
+
+---
+
+## The version PR needs an admin merge
+
+`changesets/action` builds the "Version Packages" commit by running `git commit`
+on the runner. Commits pushed that way are **never signed** — GitHub's web-flow
+signature is only applied to commits created through the API or web UI. The
+commit therefore lands as:
+
+```
+author=github-actions[bot]  verified=false  reason=unsigned
+```
+
+`main` has branch protection with `required_signatures: true`, so the version PR
+is `BLOCKED` and must be merged with `gh pr merge <n> --squash --admin`.
+`enforce_admins` is deliberately `false` so this is possible.
+
+### Two other CI facts that compound with it
+
+1. **The version PR gets no CI on creation.** GitHub does not fire
+   `pull_request` events for PRs opened with `secrets.GITHUB_TOKEN`. Closing and
+   reopening the PR as a user (`gh pr close N && gh pr reopen N`) triggers a
+   real `reopened` event and runs the full suite — worth doing before the admin
+   merge, so the release commit is actually tested.
+
+2. **`release.yml` runs `pnpm run ci` before publishing.** That is the real
+   gate: format, lint, typecheck, 100% coverage, declaration emit, and package
+   verification all run on the same execution that publishes.
+
+### If you want this fully automated
+
+Three options, in increasing order of how much you have to trust CI:
+
+- **Leave it.** A human admin-merge before every publish is a defensible gate
+  for an action that is irreversible from the public's point of view. This is
+  the current state.
+- **Give CI a signing key.** Generate a dedicated SSH key, add the public half
+  to the account as a _Signing Key_, put the private half in repo secrets, and
+  configure `git config gpg.format ssh` in the release job. Bot commits then
+  verify. The cost is a private key living in CI, which is exactly the thing
+  trusted publishing was adopted to avoid elsewhere in this pipeline.
+- **Drop `required_signatures`.** Simplest, and loses a real guarantee about
+  human commits for the sake of one bot commit. Not recommended.
+
+### Repo settings this depends on
+
+- **Settings → Actions → Workflow permissions →** "Allow GitHub Actions to
+  create and approve pull requests" must be **on**, or the version job fails
+  with `GitHub Actions is not permitted to create or approve pull requests`.
+- `LEFTHOOK=0` is set in `release.yml`, and `prepare` skips hook installation
+  when `CI` is set. Without both, `changesets/action`'s `git commit` fires the
+  pre-commit hook on a runner that has no `gitleaks` or `convco`.
