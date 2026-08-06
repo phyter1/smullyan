@@ -4,10 +4,11 @@ A fully typesafe functional programming library for TypeScript: the
 combinatory-logic **bird combinators** of Raymond Smullyan's _To Mock a
 Mockingbird_, plus a small core of algebraic data types.
 
-> **Status: pre-release (`0.0.0`).** The Bluebird is implemented and the full
-> build, test and verification pipeline is in place. The remaining combinators
-> and the `option` / `result` / `task` / `reader` / `pipe` entry points are
-> placeholders. Do not depend on this yet.
+> **Status: pre-release.** Thirty combinators are implemented and the full
+> build, test and verification pipeline is in place. The five birds of the hard
+> forest, and the `option` / `result` / `task` / `reader` / `pipe` entry points,
+> are still to come. The API of what exists is unlikely to change, but treat it
+> as unstable until `1.0.0`.
 
 ## Why birds
 
@@ -19,11 +20,18 @@ programmers already reach for:
 | Bird     | Combinator              | You know it as |
 | -------- | ----------------------- | -------------- |
 | Bluebird | `B f g x = f (g x)`     | `compose`      |
+| Queer    | `Q f g x = g (f x)`     | `pipe`         |
 | Cardinal | `C f x y = f y x`       | `flip`         |
 | Kestrel  | `K x y = x`             | `const`        |
+| Idiot    | `I x = x`               | `identity`     |
 | Starling | `S f g x = f x (g x)`   | `ap`           |
 | Psi      | `Ψ f g x y = f(gx)(gy)` | `on`           |
+| Phoenix  | `Φ f g h x = f(gx)(hx)` | `converge`     |
+| Vireo    | `V x y f = f x y`       | `pair`         |
 | Sage     | `Y f = f (Y f)`         | `fix`          |
+
+Thirty are implemented today. The full aviary, with each bird's definition and
+its typing notes, lives in [`src/birds`](./src/birds).
 
 ## Install
 

@@ -84,10 +84,10 @@ This is the full target list — roughly 35 combinators.
 | Vireo                 | `V`    | `V x y f = f x y`              | `pair` / `cons`               |
 | Warbler               | `W`    | `W f x = f x x`                | `join` (Reader)               |
 | Queer                 | `Q`    | `Q f g x = g (f x)`            | `pipe`-order compose          |
-| Quixotic              | `Q1`   | `Q1 f g x = f (g x)`           | —                             |
-| Quizzical             | `Q2`   | `Q2 f g x = g (f x)`           | —                             |
-| Quirky                | `Q3`   | `Q3 f g x = g (f x)`           | —                             |
-| Quacky                | `Q4`   | `Q4 f g x = g (f x)`           | —                             |
+| Quixotic              | `Q1`   | `Q1 f g x = f (x g)`           | —                             |
+| Quizzical             | `Q2`   | `Q2 f g x = g (x f)`           | —                             |
+| Quirky                | `Q3`   | `Q3 f g x = x (f g)`           | —                             |
+| Quacky                | `Q4`   | `Q4 f g x = x (g f)`           | —                             |
 | Robin                 | `R`    | `R x f y = f y x`              | —                             |
 | Finch                 | `F`    | `F x y f = f y x`              | —                             |
 | Goldfinch             | `G`    | `G f g x y = f y (g x)`        | —                             |
