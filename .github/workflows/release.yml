@@ -15,6 +15,13 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # changesets/action runs `git commit` to build the version PR. Any installed
+  # pre-commit hook would fire on the runner, where brew-installed tools such as
+  # gitleaks and convco do not exist. `prepare` already skips hook installation
+  # when CI is set; this makes the guarantee independent of that.
+  LEFTHOOK: '0'
+
 jobs:
   # ---------------------------------------------------------------------------
   # Opens / updates the "Version Packages" PR. Deliberately has NO environment:
