@@ -7,3 +7,4 @@
  * bundler seeing through this barrel.
  */
 export * from './birds/index';
+export * from './pipe/index';

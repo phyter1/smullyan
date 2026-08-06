@@ -36,6 +36,15 @@ export default defineConfig({
       exclude: [
         'src/**/*.d.ts',
         // Pure re-export barrels: no executable statements, only inflate counts.
+        //
+        // WARNING: this exclusion is load-bearing and dangerous. Any file named
+        // index.ts is invisible to the coverage gate. If an IMPLEMENTATION is
+        // ever written into an index.ts it will be silently unmeasured and the
+        // gate will still report 100%. `pipe` was originally written into
+        // src/pipe/index.ts and vanished from coverage exactly this way.
+        //
+        // Rule: index.ts files contain ONLY re-exports. Implementations live in
+        // named siblings (birds/bluebird.ts, pipe/pipe.ts, ...).
         'src/index.ts',
         'src/**/index.ts',
       ],
