@@ -65,7 +65,7 @@ Every module is:
 ## 3. The aviary
 
 Smullyan's birds, each with its combinatory definition and its everyday FP name.
-This is the full target list — roughly 35 combinators.
+This is the full target list — thirty-six combinators.
 
 ### 3.1 Directly typeable (the easy forest)
 

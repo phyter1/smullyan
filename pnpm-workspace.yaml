@@ -1,8 +1,18 @@
 # pnpm settings. As of pnpm 11 these live here and NOT in package.json — pnpm 11
 # no longer reads the `pnpm` field from package.json at all, silently.
 
-# lefthook's postinstall script is what fetches the platform binary and wires up
-# .git/hooks. pnpm blocks dependency lifecycle scripts by default, so it must be
-# allowed explicitly. `allowBuilds` replaced `onlyBuiltDependencies` in pnpm 11.
+# Dependency lifecycle scripts are blocked by default; each one that needs to run
+# must be allowed by name. `allowBuilds` replaced `onlyBuiltDependencies` in
+# pnpm 11. That default is a supply-chain control, not a nuisance: a postinstall
+# script runs arbitrary code on every machine that installs.
+#
+#   lefthook — its postinstall fetches the platform binary and wires .git/hooks.
+#   esbuild  — devDependency of VitePress (docs only). Its postinstall resolves
+#              the platform-specific binary package. Without it VitePress cannot
+#              start, and `pnpm install` fails the deps-status check that tsdown
+#              runs before every build.
+#
+# Neither reaches consumers: smullyan has zero runtime dependencies.
 allowBuilds:
+  esbuild: true
   lefthook: true

@@ -34,7 +34,7 @@
     "zero-dependency",
     "tree-shakable"
   ],
-  "homepage": "https://github.com/phyter1/smullyan#readme",
+  "homepage": "https://phyter1.github.io/smullyan/",
   "bugs": {
     "url": "https://github.com/phyter1/smullyan/issues"
   },
@@ -149,7 +149,7 @@
     "check:publint": "publint --strict",
     "verify:package": "bash scripts/verify-package.sh",
     "check:package": "pnpm run build && pnpm run check:dts-emit && pnpm run verify:package",
-    "ci": "pnpm run check && pnpm run check:package",
+    "ci": "pnpm run check && pnpm run check:package && pnpm run docs:check",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm run build && changeset publish",
@@ -158,7 +158,14 @@
     "hooks:uninstall": "lefthook uninstall",
     "secrets:scan": "gitleaks git --redact --no-banner --exit-code 1 .",
     "commits:check": "convco check",
-    "convco:verify": "convco config | grep -q 'birds' || { echo 'ERROR: .convco failed to parse - convco fell back to DEFAULTS and the scope allowlist is NOT enforced.'; exit 1; }"
+    "convco:verify": "convco config | grep -q 'birds' || { echo 'ERROR: .convco failed to parse - convco fell back to DEFAULTS and the scope allowlist is NOT enforced.'; exit 1; }",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "pnpm run docs:gen && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:api": "node scripts/gen-api-reference.mjs",
+    "docs:aviary": "node scripts/gen-aviary.mjs",
+    "docs:gen": "pnpm run build && pnpm run docs:api && pnpm run docs:aviary",
+    "docs:check": "pnpm run docs:gen && git diff --exit-code --stat -- docs/reference/api.md docs/reference/aviary.md"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
@@ -177,6 +184,7 @@
     "tsdown": "0.22.14",
     "typescript": "7.0.2",
     "vite": "8.2.0",
+    "vitepress": "1.6.4",
     "vitest": "4.1.10"
   },
   "packageManager": "pnpm@11.20.0",

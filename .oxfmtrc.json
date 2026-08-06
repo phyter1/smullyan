@@ -29,6 +29,10 @@
     "node_modules/",
     "CHANGELOG.md",
     ".changeset/",
-    ".types-reference/"
+    ".types-reference/",
+    "docs/reference/api.md",
+    "docs/reference/aviary.md",
+    "docs/.vitepress/dist/",
+    "docs/.vitepress/cache/"
   ]
 }
