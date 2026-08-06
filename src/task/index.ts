@@ -1,12 +1,19 @@
 /**
- * `smullyan/task` — placeholder.
+ * `smullyan/task` — a lazy asynchronous computation.
  *
- * This entry point exists so the seven-entry build and the hand-written
- * exports map resolve. It is intentionally empty at Milestone 0.
- *
- * DO NOT ship a non-0.0.0 release with this file still empty: publint and attw
- * both pass happily on an empty module, so nothing downstream will catch it.
- * Either implement it or remove the entry from BOTH tsdown.config.ts and the
- * `exports` map in package.json.
+ * Pure re-export barrel; the implementation lives in `task.ts` so that it is
+ * covered by the coverage gate. See the warning in `vitest.config.ts`.
  */
-export {};
+export {
+  type Task,
+  type TaskResult,
+  of,
+  fromPromise,
+  fromSync,
+  map,
+  flatMap,
+  ap,
+  tryCatch,
+  all,
+  sequential,
+} from './task';

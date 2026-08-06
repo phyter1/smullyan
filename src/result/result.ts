@@ -32,6 +32,20 @@
  *
  * The one place this shows is {@link fromThrowable}, where JavaScript hands us
  * an `unknown` — see the note there.
+ *
+ * ## Generic scoping
+ *
+ * Every combinator here scopes `E` to the call that SUPPLIES it, exactly as the
+ * birds do (see `birds/bluebird.ts`). Writing `map` as
+ * `<E, A, B>(f: (a: A) => B) => (fa: Result<E, A>) => Result<E, B>` compiles
+ * and is WRONG: `E` appears nowhere in `f`, so it defaults to `unknown` and the
+ * error type is silently discarded.
+ *
+ * That failure is invisible without a type test, because `Result<E, A>` is
+ * COVARIANT in `E` — `Result<MyError, A>` is assignable to
+ * `Result<unknown, A>`, so every call still compiles and every runtime test
+ * still passes. `Reader<R, A>` is contravariant in `R` and therefore fails
+ * loudly under the same mistake. Same bug, opposite volume.
  */
 
 /** The success case. */
@@ -107,11 +121,11 @@ export const fromNullable: <E, A>(
 // --- Transformation --------------------------------------------------------
 
 /** Apply a function to the success value. Failures pass through untouched. */
-export const map: <E, A, B>(f: (a: A) => B) => (fa: Result<E, A>) => Result<E, B> = (f) => (fa) =>
+export const map: <A, B>(f: (a: A) => B) => <E>(fa: Result<E, A>) => Result<E, B> = (f) => (fa) =>
   isOk(fa) ? ok(f(fa.value)) : fa;
 
 /** Apply a function to the failure value. Successes pass through untouched. */
-export const mapErr: <E, F, A>(f: (e: E) => F) => (fa: Result<E, A>) => Result<F, A> =
+export const mapErr: <E, F>(f: (e: E) => F) => <A>(fa: Result<E, A>) => Result<F, A> =
   (f) => (fa) =>
     isErr(fa) ? err(f(fa.error)) : fa;
 
@@ -121,14 +135,14 @@ export const mapErr: <E, F, A>(f: (e: E) => F) => (fa: Result<E, A>) => Result<F
  * The error types union rather than being forced to match, so a pipeline can
  * accumulate distinct failure modes without a common base type.
  */
-export const flatMap: <E, F, A, B>(
+export const flatMap: <A, F, B>(
   f: (a: A) => Result<F, B>,
-) => (fa: Result<E, A>) => Result<E | F, B> = (f) => (fa) => (isOk(fa) ? f(fa.value) : fa);
+) => <E>(fa: Result<E, A>) => Result<E | F, B> = (f) => (fa) => (isOk(fa) ? f(fa.value) : fa);
 
 /** Apply a wrapped function to a wrapped value. Fails on the FIRST error. */
-export const ap: <E, F, A, B>(
+export const ap: <F, A, B>(
   ff: Result<F, (a: A) => B>,
-) => (fa: Result<E, A>) => Result<E | F, B> = (ff) => (fa) => {
+) => <E>(fa: Result<E, A>) => Result<E | F, B> = (ff) => (fa) => {
   if (isErr(ff)) return ff;
   return isOk(fa) ? ok(ff.value(fa.value)) : fa;
 };

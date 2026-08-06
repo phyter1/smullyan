@@ -20,3 +20,5 @@ export * from './pipe/index';
 
 export * as Option from './option/index';
 export * as Result from './result/index';
+export * as Task from './task/index';
+export * as Reader from './reader/index';
