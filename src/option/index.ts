@@ -1,12 +1,37 @@
 /**
- * `smullyan/option` — placeholder.
+ * `smullyan/option` — a value that may be absent.
  *
- * This entry point exists so the seven-entry build and the hand-written
- * exports map resolve. It is intentionally empty at Milestone 0.
- *
- * DO NOT ship a non-0.0.0 release with this file still empty: publint and attw
- * both pass happily on an empty module, so nothing downstream will catch it.
- * Either implement it or remove the entry from BOTH tsdown.config.ts and the
- * `exports` map in package.json.
+ * Pure re-export barrel; the implementation lives in `option.ts` so that it is
+ * covered by the coverage gate. See the warning in `vitest.config.ts`.
  */
-export {};
+export {
+  // Types
+  type Option,
+  type Some,
+  type None,
+  // Constructors
+  some,
+  none,
+  // Refinements
+  isSome,
+  isNone,
+  // Interop
+  fromNullable,
+  fromThrowable,
+  fromPredicate,
+  toNullable,
+  toUndefined,
+  // Transformation
+  map,
+  flatMap,
+  ap,
+  filter,
+  flatten,
+  // Elimination
+  match,
+  getOrElse,
+  orElse,
+  // Traversal
+  sequence,
+  traverse,
+} from './option';
