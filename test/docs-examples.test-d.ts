@@ -38,6 +38,14 @@ import * as Task from '../src/task/task';
 const inc = (n: number): number => n + 1;
 const show = (n: number): string => String(n);
 
+// Ambient fixtures for signature-only examples. `declare const` emits nothing
+// and, unlike `null as unknown as Fn`, does not read as invoking null — which
+// CodeQL flags, correctly, as "invocation of non-function".
+type IoError = { readonly kind: 'io' };
+type ParseError = { readonly kind: 'parse' };
+declare const readFile: (p: string) => Result.Result<IoError, string>;
+declare const parseJson: (s: string) => Result.Result<ParseError, number>;
+
 describe('docs/index.md — hero', () => {
   it('composition and the Sage bird', () => {
     const incThenShow = B(String)(inc);
@@ -82,12 +90,7 @@ describe('docs/guide/option-result.md', () => {
   });
 
   it('flatMap unions the error types', () => {
-    type IoError = { readonly kind: 'io' };
-    type ParseError = { readonly kind: 'parse' };
-    const readFile = null as unknown as (p: string) => Result.Result<IoError, string>;
-    const parse = null as unknown as (s: string) => Result.Result<ParseError, number>;
-
-    const r = pipe(readFile('x.json'), Result.flatMap(parse));
+    const r = pipe(readFile('x.json'), Result.flatMap(parseJson));
     expectTypeOf(r).toEqualTypeOf<Result.Result<IoError | ParseError, number>>();
   });
 

@@ -214,7 +214,9 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-const esc = (s) => s.replaceAll(/\|/g, '\\|').replaceAll(/\n/g, ' ');
+// Backslash FIRST: escaping `|` introduces backslashes, so doing it the other
+// way round would double-escape them and mangle any literal `\` in the text.
+const esc = (s) => s.replaceAll('\\', '\\\\').replaceAll('|', '\\|').replaceAll('\n', ' ');
 
 let md = `---
 # GENERATED FILE — DO NOT EDIT.
