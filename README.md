@@ -4,11 +4,10 @@ A fully typesafe functional programming library for TypeScript: the
 combinatory-logic **bird combinators** of Raymond Smullyan's _To Mock a
 Mockingbird_, plus a small core of algebraic data types.
 
-> **Status: pre-release.** All thirty-five combinators are implemented,
-> including the hard forest, with the full build, test and verification
-> pipeline in place. The `option` / `result` / `task` / `reader` / `pipe` entry
-> points are still to come. The API of what exists is unlikely to change, but
-> treat it as unstable until `1.0.0`.
+> **Status: pre-release.** Feature-complete against the original plan: all
+> thirty-five combinators including the hard forest, plus `Option`, `Result`,
+> `Task`, `Reader`, `pipe` and `flow`. The API is unlikely to change, but treat
+> it as unstable until `1.0.0`.
 
 ## Why birds
 
