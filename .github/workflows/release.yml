@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# npm trusted publishing authorises the workflow FILE that starts the run
+# (workflow_ref), not the job. So splitting version and publish into sibling
+# jobs in this same file is fine — what would break the OIDC claim is moving the
+# publish into a `workflow_call` reusable workflow.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Opens / updates the "Version Packages" PR. Deliberately has NO environment:
+  # every routine merge to main runs this job, and gating it behind an
+  # environment with required reviewers would stall ordinary merges waiting for
+  # an approval that has nothing to do with publishing.
+  # ---------------------------------------------------------------------------
+  version:
+    name: Version
+    if: github.repository == 'phyter1/smullyan'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the version branch
+      pull-requests: write # open and update the "Version Packages" PR
+    outputs:
+      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # changesets needs full history to diff against baseBranch
+
+      - name: Setup pnpm + Node and install
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24 # ships npm 11.17.x (>= 11.5.1 required for OIDC)
+          cache: true
+
+      - name: Create or update the version PR
+        id: changesets
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          version: pnpm run version-packages
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Publishes to npm. Only runs when there are NO changesets left on main, i.e.
+  # the "Version Packages" PR has just been merged.
+  #
+  # KNOWN GAP: changesets/action opens the version PR with secrets.GITHUB_TOKEN,
+  # and GitHub does not fire `pull_request` events for PRs created by that token.
+  # So ci.yml never runs on the version PR — the `pnpm run ci` step below is the
+  # real gate, and it runs on the same execution that publishes. To close this,
+  # wire a GitHub App token into changesets/action's github-token input.
+  # See docs/RELEASING.md.
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish to npm
+    needs: version
+    if: ${{ github.repository == 'phyter1/smullyan' && needs.version.outputs.hasChangesets == 'false' }}
+    runs-on: ubuntu-latest
+    # Must match the environment registered on the npm trusted publisher exactly,
+    # or be omitted on both sides.
+    environment: npm-publish
+    permissions:
+      contents: write # create tags + GitHub releases
+      id-token: write # REQUIRED: mint the OIDC token npm exchanges for a publish token
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # NOTE: deliberately no actions/setup-node with `registry-url:`. That makes
+      # setup-node write `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`
+      # into .npmrc; with no NODE_AUTH_TOKEN set, the literal placeholder is sent
+      # as a bearer token and the publish fails with a confusing 404.
+      - name: Setup pnpm + Node and install
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+
+      # Gate the release on the full quality bar: format, lint, types, tests,
+      # 100% coverage, declaration emit, and published-package verification.
+      - name: Verify
+        run: pnpm run ci
+
+      - name: Publish
+        id: changesets
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          publish: pnpm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # `changeset publish` shells out to `pnpm publish`, and pnpm implements
+          # publish natively without forwarding a --provenance flag. pnpm also
+          # ignores publishConfig.provenance (it only reads .registry, .directory,
+          # .executableFiles and .linkDirectory). This env var is the ONLY
+          # load-bearing way to get provenance on this stack.
+          NPM_CONFIG_PROVENANCE: 'true'
+
+      - name: Summarise
+        if: steps.changesets.outputs.published == 'true'
+        run: echo 'Published ${{ steps.changesets.outputs.publishedPackages }}' >> "$GITHUB_STEP_SUMMARY"

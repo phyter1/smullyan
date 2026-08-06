@@ -1,0 +1,152 @@
+# Git hooks for smullyan — https://lefthook.dev
+#
+# Requires:
+#   lefthook >= 2.1.10   devDependency; `pnpm run prepare` writes .git/hooks
+#   gitleaks >= 8.30.1   brew install gitleaks
+#   convco   >= 0.7.1    brew install convco
+#
+# Escape hatches. Never on `main`, and never for the `secrets` job:
+#   LEFTHOOK=0 git commit ...                  disable every hook
+#   LEFTHOOK_EXCLUDE=typecheck git commit ...  disable one job by name
+#   git commit --no-verify                     bypass lefthook entirely
+#                                              (pre-push and CI still gate you)
+
+min_version: 2.1.10
+assert_lefthook_installed: true
+
+# Silent on success. On failure, print the failing job's output plus which jobs
+# ran, so a red hook is self-diagnosing without re-running it verbosely.
+output:
+  - failure
+  - execution_info
+  - summary
+
+pre-commit:
+  parallel: true
+  # A merge or rebase replays commits that were already gated. Re-linting them
+  # produces noise at exactly the moment the developer can least act on it.
+  skip:
+    - merge
+    - rebase
+  jobs:
+    # ~150-300ms. Conceptually first: a leaked credential pushed to a PUBLIC
+    # repo is unrecoverable — rotation is the only remedy — so this is the one
+    # gate that must never be skipped.
+    - name: secrets
+      run: gitleaks git --staged --redact --no-banner --exit-code 1 .
+      fail_text: |
+        gitleaks found a probable secret in your staged changes.
+        If it is real: rotate it first, then remove it. Do not "fix it later".
+        If it is a false positive: prefer a fingerprint in .gitleaksignore over
+        widening .gitleaks.toml.
+        Binary missing? `brew install gitleaks`
+
+    # ~20-60ms. `--check` never writes, so the hook cannot silently rewrite the
+    # tree under you; formatting stays an explicit `pnpm run format`.
+    - name: format
+      glob: '*.{ts,mts,cts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}'
+      run: pnpm exec oxfmt --check --no-error-on-unmatched-pattern {staged_files}
+      fail_text: 'Formatting drift. Run `pnpm run format`, then re-stage.'
+
+    # ~400-900ms, dominated by tsgolint building the TypeScript program rather
+    # than by the number of staged files. This is the expensive job in the
+    # chain — see the pre-push note at the bottom of this file.
+    - name: lint
+      glob: '*.{ts,mts,cts,tsx}'
+      run: pnpm exec oxlint --type-aware --deny-warnings {staged_files}
+      fail_text: |
+        oxlint (type-aware) found problems. Fix them; an `oxlint-disable` is
+        acceptable only with a comment explaining WHY on the line above.
+        Missing the type-aware backend? `pnpm add -D oxlint-tsgolint`
+
+    # ~250-600ms on TypeScript 7. Whole-project by necessity: `tsc` ignores
+    # tsconfig.json entirely when handed file arguments, and this library's
+    # emitted .d.ts IS the product, so a file-scoped check would be worthless.
+    # The glob only decides WHETHER it runs, not what it checks.
+    - name: typecheck
+      glob: '*.{ts,mts,cts,tsx}'
+      run: pnpm exec tsc --noEmit -p tsconfig.json
+      fail_text: 'Type errors. The declarations are the product — never commit red types.'
+
+commit-msg:
+  # Cheap enough to run serially, and piped ordering makes the two failures
+  # read in a sensible order (grammar first, then house style).
+  piped: true
+  skip:
+    - merge
+    - rebase
+  jobs:
+    # ~5-15ms: a single Rust binary, no Node process. Validates the
+    # type/scope/breaking-change grammar against .convco. {1} is git's
+    # COMMIT_EDITMSG path; --strip removes comments and trailing whitespace the
+    # same way `git commit --cleanup=strip` does.
+    - name: conventional-commit
+      run: convco check --from-stdin --strip < {1}
+      fail_text: |
+        Commit message is not a Conventional Commit.
+            <type>[optional scope][!]: <description>
+            e.g. feat(birds): add the phoenix combinator
+        Allowed types and scopes are declared in .convco.
+        Binary missing? `brew install convco`
+
+    # convco validates grammar but not house style. These are the two rules the
+    # project actually states: subject <= 72 characters, no trailing period.
+    - name: commit-msg-style
+      run: |
+        subject=$(head -n 1 "{1}")
+        length=$(printf '%s' "$subject" | wc -m | tr -d ' ')
+        if [ "$length" -gt 72 ]; then
+          echo "Commit subject is $length characters; keep it to 72 or fewer."
+          echo "  $subject"
+          exit 1
+        fi
+        case "$subject" in
+          *.)
+            echo "Commit subject must not end with a period."
+            echo "  $subject"
+            exit 1
+            ;;
+        esac
+
+pre-push:
+  # Sequential and fail-fast. Parallel would spawn several processes that each
+  # build their own TypeScript program, and the first failure is the one worth
+  # reading anyway.
+  piped: true
+  skip:
+    - merge
+    - rebase
+  jobs:
+    - name: format-all
+      run: pnpm exec oxfmt --check .
+      fail_text: 'Formatting drift outside your staged files. Run `pnpm run format`.'
+
+    - name: lint-all
+      run: pnpm exec oxlint --type-aware --deny-warnings .
+
+    - name: typecheck
+      run: pnpm exec tsc --noEmit -p tsconfig.json
+
+    - name: test
+      run: pnpm exec vitest run --coverage
+      fail_text: 'Tests failed, or coverage dropped below the 100% gate.'
+
+    # Defence in depth against `--no-verify`: re-validate every commit message
+    # that is about to become public. Skipped before `origin/main` exists (the
+    # `skip: run:` predicate skips when the command exits 0).
+    - name: commit-messages
+      skip:
+        - run: '! git rev-parse --verify --quiet origin/main >/dev/null 2>&1'
+      run: convco check "$(git merge-base origin/main HEAD)..HEAD"
+      fail_text: |
+        One or more commits about to be pushed are not Conventional Commits.
+        Fix with `git rebase -i --autosquash origin/main` (reword the offenders).
+
+# Tuning note for future maintainers:
+#
+# `lint` and `typecheck` each build a TypeScript program, so they are the only
+# jobs whose cost grows with the codebase. If `pnpm run hooks:check` starts
+# taking longer than ~2.5s, delete the `typecheck` job from `pre-commit` — it is
+# the redundant one (whole-project, not staged-scoped) and pre-push already runs
+# it. Do NOT drop the type-aware `lint` instead: it is the only staged-file
+# scoped check that reasons about types.

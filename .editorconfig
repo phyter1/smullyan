@@ -1,0 +1,41 @@
+# EditorConfig — https://editorconfig.org
+#
+# IMPORTANT: oxfmt READS this file. It maps end_of_line -> endOfLine,
+# indent_style -> useTabs, indent_size -> tabWidth, max_line_length ->
+# printWidth and insert_final_newline -> insertFinalNewline, and applies them as
+# a FALLBACK for fields .oxfmtrc.json leaves unset. Precedence is:
+#   defaults < config root options < config overrides < .editorconfig fallback
+# for unset fields — so .oxfmtrc.json always wins where it speaks, and this file
+# fills the gaps.
+#
+# The values below are therefore chosen to be identical to oxfmt's: tabWidth 2,
+# useTabs false, printWidth 100, endOfLine "lf", insertFinalNewline true. Change
+# one and you must change the other, or your editor and your formatter will
+# disagree and the pre-commit `format` job will fight you.
+#
+# Also note: only the NEAREST .editorconfig is used — nested files are not
+# merged — so keep this the only one in the repo.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 100
+
+# Markdown uses two trailing spaces as a hard line break; stripping them changes
+# rendered output. oxfmt does not format Markdown, so there is no conflict.
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Lockfiles and generated files are machine-owned; do not let an editor reflow
+# them into a spurious diff.
+[{pnpm-lock.yaml,*.min.js,*.d.ts.map}]
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+max_line_length = off

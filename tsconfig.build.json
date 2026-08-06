@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+
+    // OFF deliberately. We publish dist/ only (see `files` in package.json),
+    // so a declaration map would point at src/*.ts that is not in the tarball.
+    // A dangling sourcemap is worse than no sourcemap. If src/ is ever added
+    // back to `files`, turn this on together with `sourcemap`/`dts.sourcemap`
+    // in tsdown.config.ts - and verify the `sources` array actually survives
+    // the tsgo-tmpdir -> rolldown -> dist double remap before trusting it.
+    "declarationMap": false,
+
+    // Default only. Both consumers override it:
+    //   - tsgo is spawned by rolldown-plugin-dts with --outDir <tmpdir>
+    //   - `pnpm check:dts-emit` passes --outDir .types-reference
+    "outDir": "dist",
+
+    // tsgo is spawned as a plain `tsc -p` invocation; project references and
+    // .tsbuildinfo would only get in the way of a from-scratch emit.
+    "composite": false,
+    "incremental": false
+
+    // isolatedDeclarations is INHERITED as true from tsconfig.json and stays on.
+    // That is safe here only because tsdown.config.ts pins
+    // `dts: { generator: 'tsgo' }` explicitly - rolldown-plugin-dts's
+    // auto-detection would otherwise see isolatedDeclarations and switch to the
+    // oxc emitter, which silently drops stripInternal. Do not remove that pin.
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test-d.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.bench.ts",
+    "test/**/*"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Tests are never published, so declaration discipline does not apply.
+    "isolatedDeclarations": false,
+    "declaration": false,
+    "declarationMap": false,
+
+    // The negative suite deliberately declares bindings that are never read,
+    // e.g. `// @ts-expect-error` followed by `const _bad: string = B(f)(g)(x)`.
+    // Leaving these on would turn every negative test into a false failure.
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+
+    // Third-party .d.ts (vitest, fast-check, expect-type) are outside our
+    // control; a broken upstream declaration must not block the test gate.
+    // src/ still type-checks with skipLibCheck: false via tsconfig.json.
+    "skipLibCheck": true,
+
+    // test/setup.ts reads process.env (CI, FC_SEED), so the test project needs
+    // node globals. The library project (tsconfig.json) keeps `types: []`, which
+    // is what guarantees the published .d.ts has zero ambient dependencies.
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["./**/*.ts", "../src/**/*.ts"]
+}

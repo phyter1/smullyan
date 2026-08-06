@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    // Every exported value must carry a syntactically-derivable type. For a
+    // library whose .d.ts IS the product this is the single highest-value
+    // flag in the file: it makes the public type surface a written artifact
+    // rather than an inference result that can drift between compiler
+    // versions. Costs nothing for interfaces, type aliases, conditional or
+    // recursive types - those are emitted verbatim regardless.
+    "isolatedDeclarations": true,
+
+    "rootDir": "./src",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.bench.ts"]
+}
