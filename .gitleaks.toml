@@ -1,0 +1,32 @@
+# gitleaks configuration for smullyan.
+# Verified against gitleaks v8.30.1.
+#
+# Deliberately minimal. The bundled default config already allowlists
+# pnpm-lock.yaml, package-lock.json, yarn.lock, deno.lock and friends, so we do
+# NOT restate them here: a duplicated allowlist is a maintenance liability that
+# silently diverges from upstream. Generated output (dist/, coverage/) is
+# gitignored and gitleaks only ever reads git diffs, so it is unreachable too.
+#
+# Preferred order for handling a false positive:
+#   1. Reword the code so it stops looking like a credential.
+#   2. Add the finding's fingerprint to .gitleaksignore — surgical and auditable.
+#   3. Only then widen an allowlist below, with a description saying why.
+
+title = "smullyan"
+
+[extend]
+useDefault = true
+
+# A public library's docs and README must be free to show obviously-fake tokens
+# in examples. `condition = "AND"` is load-bearing: gitleaks ORs allowlist
+# criteria by default, so without it the `paths` entry alone would exempt the
+# whole of docs/ from scanning — a real key pasted into a doc would sail through.
+[[allowlists]]
+description = "Obvious placeholder credentials in documentation and examples"
+condition = "AND"
+paths = ['''(^|/)(docs|examples)/''', '''(^|/)README\.md$''']
+regexTarget = "line"
+regexes = [
+  '''(?i)\b(example|placeholder|dummy|fake|sample|redacted|your)[-_ ]?(api[-_ ]?)?(key|token|secret|password)\b''',
+  '''(?i)\bx{3,}\b''',
+]

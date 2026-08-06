@@ -1,0 +1,72 @@
+# Advanced setup (a checked-in workflow), NOT default setup.
+#
+# Default setup is a GitHub-managed, unversioned configuration. It cannot be
+# SHA-pinned, cannot be reviewed in a PR, and cannot express `queries:` or
+# `config`. For a public library whose supply-chain posture is the selling
+# point — and which is scored by OpenSSF Scorecard's Pinned-Dependencies check —
+# advanced setup is the correct choice. Enabling default setup in the UI
+# DISABLES this workflow, so pick one and only one.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # CodeQL query packs ship new rules continuously; re-run weekly against a
+    # frozen codebase to pick them up.
+    - cron: '41 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # Required to publish alerts to the Security > Code scanning tab.
+      security-events: write
+      # Required by codeql-action to read workflow run metadata when correlating
+      # results and computing PR diff ranges. See github/codeql-action#2117.
+      actions: read
+      # Required to pull CodeQL query packs from the GitHub Container Registry.
+      packages: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+            # smullyan is a pure TypeScript library: nothing needs to be compiled
+            # for CodeQL to extract it, so `none` skips the autobuilder entirely.
+            build-mode: none
+          - language: actions
+            build-mode: none
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # NOTE: no pnpm install. The javascript-typescript extractor parses source
+      # with its OWN bundled TypeScript compiler; it never reads the repo's
+      # typescript dependency, so TS 7 in package.json is irrelevant to it.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-extended,security-and-quality
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
+        with:
+          category: /language:${{ matrix.language }}

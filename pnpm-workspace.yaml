@@ -1,0 +1,8 @@
+# pnpm settings. As of pnpm 11 these live here and NOT in package.json — pnpm 11
+# no longer reads the `pnpm` field from package.json at all, silently.
+
+# lefthook's postinstall script is what fetches the platform binary and wires up
+# .git/hooks. pnpm blocks dependency lifecycle scripts by default, so it must be
+# allowed explicitly. `allowBuilds` replaced `onlyBuiltDependencies` in pnpm 11.
+allowBuilds:
+  lefthook: true

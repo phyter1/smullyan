@@ -1,0 +1,71 @@
+# OpenSSF Scorecard.
+#
+# The scorecard-webapp API enforces structural rules on the producing workflow
+# when publish_results is true, and REJECTS the results (failing the run) if
+# they are broken. Do not "tidy" this file:
+#   * no workflow-level `env:` or `defaults:`
+#   * no workflow-level WRITE permissions (read-all is fine)
+#   * only the scorecard job may hold `id-token: write`
+#   * the scorecard job may have no job-level `env:`/`defaults:`, no containers
+#     or services, must run on a GitHub-hosted Ubuntu runner, and may only use
+#     steps from: actions/checkout, actions/upload-artifact,
+#     github/codeql-action/upload-sarif, ossf/scorecard-action,
+#     step-security/harden-runner.
+# Only `push` (default branch) and `schedule` are supported triggers.
+name: Scorecard
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 3 * * 3'
+  # No workflow_dispatch: the Scorecard docs mark it (and pull_request)
+  # experimental, and the publish API may reject results from those triggers.
+
+permissions: read-all
+
+concurrency:
+  group: scorecard-${{ github.ref }}
+  # Never cancel: a partial Scorecard run publishes nothing useful.
+  cancel-in-progress: false
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      # Publish SARIF to the Security > Code scanning tab.
+      security-events: write
+      # REQUIRED for publish_results: true. The action exchanges the GitHub OIDC
+      # token with api.scorecard.dev to prove the results came from this repo's
+      # workflow. Without it, publishing (and therefore the README badge and the
+      # public API entry) is impossible.
+      id-token: write
+      # Job-level `permissions:` REPLACES the workflow-level block outright —
+      # anything unlisted becomes `none` — so contents: read must be restated
+      # here or actions/checkout cannot authenticate.
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
+        with:
+          sarif_file: results.sarif

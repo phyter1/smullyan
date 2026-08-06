@@ -1,0 +1,204 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+# Least privilege by default. No job in this workflow escalates beyond read.
+# `actions/upload-artifact` does NOT need a GITHUB_TOKEN scope: it authenticates
+# with the ephemeral Actions runtime token, not the job token.
+permissions:
+  contents: read
+
+# Supersede in-flight runs for the same PR/branch. Never cancel merge-queue runs,
+# because the queue treats a cancelled check as a failure and evicts the PR.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    name: Quality (format, lint, types)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # pnpm/setup downloads pnpm's native per-platform executable and installs
+      # the Node runtime itself, reading `packageManager` and `devEngines.runtime`
+      # from package.json. No actions/setup-node, no corepack.
+      # Corepack is deliberately NOT used: Node 25+ no longer bundles it and
+      # Node 26 becomes Active LTS on 2026-10-28 without it.
+      - name: Setup pnpm + Node and install
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+
+      - name: Check formatting (oxfmt)
+        run: pnpm run format:check
+
+      # Type-aware rules run via tsgolint. NOTE: oxlint's --tsconfig flag is
+      # explicitly NOT respected by type-aware linting; it always auto-discovers
+      # the nearest tsconfig.json per file. If test/ ever stops being covered,
+      # the whole test tree is silently exempt. Verify with OXC_LOG=debug.
+      - name: Lint with type-aware rules (oxlint + tsgolint)
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck:all
+
+  test:
+    name: Test (100% coverage gate)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm + Node and install
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+
+      # Thresholds live in vitest.config.ts (100/100/100/100). Vitest exits
+      # non-zero when any threshold is unmet, so this step IS the gate.
+      - name: Run tests with coverage
+        run: pnpm run test:coverage
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  types:
+    name: Type tests (TypeScript ${{ matrix.typescript }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # `latest` currently resolves to typescript@7.0.2.
+          - typescript: latest
+            required: true
+          # `next` is the 7.1 nightly (e.g. 7.1.0-dev.20260806.1). Advisory only:
+          # a nightly regression must never block a merge. Note that 7.1 is also
+          # the release expected to break rolldown-plugin-dts's tsgo pin, so this
+          # leg going red is an early warning, not a bug in this repo.
+          - typescript: next
+            required: false
+    continue-on-error: ${{ !matrix.required }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm + Node and install
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+
+      # Overrides the locked typescript. Mutates pnpm-lock.yaml in the runner
+      # workspace only; nothing is committed.
+      # typescript@7.0.2's bin is exactly {"tsc": "bin/tsc"} — there is NO tsgo
+      # binary. `tsgo` belongs to @typescript/native-preview, the pre-GA package
+      # that TS 7 GA superseded.
+      - name: Override TypeScript to ${{ matrix.typescript }}
+        run: |
+          pnpm add -D "typescript@${{ matrix.typescript }}"
+          echo "Resolved: $(pnpm exec tsc --version)"
+
+      - name: Typecheck
+        run: pnpm run typecheck:all
+
+      - name: expect-type assertions and @ts-expect-error negative suite
+        run: pnpm run test:types
+
+  build:
+    name: Build and verify declarations
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm + Node and install
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+
+      # THE LOAD-BEARING STEP. tsdown drives rolldown-plugin-dts, which spawns
+      # tsgo under --noCheck and resolves on 'close' WITHOUT reading the exit
+      # code. Declaration-emit-only diagnostics (TS4023, TS2742) — precisely
+      # what deeply inferred curried generics provoke — are suppressed there,
+      # and a type degraded to `any` would ship silently.
+      # This runs the real compiler with declaration emit and a real exit code.
+      # Do not remove it, and do not let it become non-blocking.
+      - name: Verify declarations actually emit (exit-code gated)
+        run: pnpm run check:dts-emit
+
+      - name: Build (tsdown)
+        run: pnpm run build
+
+      # Belt-and-braces against a silent `any` in the published surface.
+      - name: Assert no exported combinator degraded to `any`
+        run: |
+          if grep -rnE '^\s*(export )?(declare )?const [A-Za-z0-9_]+: any' dist/*.d.mts dist/*.d.cts; then
+            echo "::error::An exported declaration degraded to \`any\` in the published .d.ts."
+            exit 1
+          fi
+          echo "no degraded exports found"
+
+      # publint catches malformed exports maps / missing files before attw does,
+      # and verify-package.sh pins all seven entry points explicitly.
+      - name: Verify published package shape and type resolution
+        run: pnpm run verify:package
+
+      - name: Upload build output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  # Single required status check to protect main with. Add only this to the
+  # branch ruleset instead of enumerating every matrix leg.
+  ci-ok:
+    name: CI OK
+    if: ${{ always() }}
+    needs: [quality, test, types, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Fail if any required job failed
+        run: |
+          echo "quality=${{ needs.quality.result }}"
+          echo "test=${{ needs.test.result }}"
+          echo "types=${{ needs.types.result }}"
+          echo "build=${{ needs.build.result }}"
+          [ "${{ needs.quality.result }}" = "success" ] || exit 1
+          [ "${{ needs.test.result }}"    = "success" ] || exit 1
+          [ "${{ needs.types.result }}"   = "success" ] || exit 1
+          [ "${{ needs.build.result }}"   = "success" ] || exit 1

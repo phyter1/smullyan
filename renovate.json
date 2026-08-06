@@ -1,0 +1,103 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    ":dependencyDashboard",
+    ":pinDevDependencies",
+    "helpers:pinGitHubActionDigests",
+    "security:openssf-scorecard"
+  ],
+  "timezone": "Etc/UTC",
+  "schedule": ["before 06:00 on monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 0,
+  "configMigration": true,
+  "rebaseWhen": "conflicted",
+  "labels": ["dependencies"],
+  "postUpdateOptions": ["pnpmDedupe"],
+  "minimumReleaseAge": "3 days",
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null,
+    "prCreation": "immediate"
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 06:00 on the first day of the month"]
+  },
+  "packageRules": [
+    {
+      "description": "GitHub Actions: keep every `uses:` pinned to a 40-char SHA and refresh those SHAs weekly in one PR. helpers:pinGitHubActionDigests does the initial tag->SHA rewrite; this rule keeps them current. Without it the pins rot into permanently stale, unpatched action code.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "commitMessageTopic": "GitHub Actions",
+      "pinDigests": true,
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "matchUpdateTypes": ["digest", "pin", "pinDigest", "patch", "minor"]
+    },
+    {
+      "description": "GitHub Action MAJOR bumps get their own reviewable PR: v4->v5 of an action routinely changes input names or the Node runtime.",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "automerge": false,
+      "addLabels": ["breaking"]
+    },
+    {
+      "description": "TypeScript is the product's substrate. Never group it, never automerge it: a compiler bump can silently change inference and thus the shipped .d.ts.",
+      "matchPackageNames": ["typescript"],
+      "groupName": null,
+      "automerge": false,
+      "minimumReleaseAge": "7 days",
+      "addLabels": ["typescript", "review-declarations"]
+    },
+    {
+      "description": "oxc toolchain moves in lockstep — oxlint and oxlint-tsgolint versions are coupled, and splitting them produces a broken intermediate state.",
+      "matchPackageNames": [
+        "oxlint",
+        "oxfmt",
+        "oxlint-tsgolint",
+        "/^@oxc-project//",
+        "/^@oxlint//"
+      ],
+      "groupName": "oxc toolchain",
+      "automerge": false
+    },
+    {
+      "description": "Bundler stack: tsdown sits directly on rolldown, so pair them.",
+      "matchPackageNames": ["tsdown", "rolldown", "/^@rolldown//", "unplugin-isolated-decl"],
+      "groupName": "tsdown + rolldown",
+      "automerge": false
+    },
+    {
+      "description": "Test stack. Safe to automerge non-major once CI (including the 100% coverage gate) is green.",
+      "matchPackageNames": ["vitest", "/^@vitest//", "expect-type", "fast-check"],
+      "groupName": "test tooling",
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Package-publishing verification tools.",
+      "matchPackageNames": ["@arethetypeswrong/cli", "publint", "@changesets/cli"],
+      "groupName": "publishing tooling",
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Pin devDependencies exactly. This is a zero-runtime-dependency library, so every dependency is a build input and reproducibility beats range flexibility.",
+      "matchDepTypes": ["devDependencies"],
+      "rangeStrategy": "pin"
+    }
+  ]
+}

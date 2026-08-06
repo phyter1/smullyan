@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // --- Language / emit target -------------------------------------------
+    // TS 7 defaults `target` to a FLOATING "latest stable ECMAScript" (es2025
+    // today). A published library must never have its emitted syntax change
+    // just because the compiler was upgraded, so we pin explicitly.
+    "target": "es2022",
+    "lib": ["es2023"],
+    "useDefineForClassFields": true,
+
+    // --- Module system ------------------------------------------------------
+    // tsdown (rolldown) is the emitter and bundles every subpath entry, so
+    // `bundler` resolution matches how the code is actually resolved at build
+    // time and lets us write extensionless relative imports. `preserve` keeps
+    // ESM syntax intact for rolldown to consume. Correctness of the SHIPPED
+    // dual ESM+CJS surface is a property of tsdown's output + package.json
+    // "exports", and is verified with attw, not by this setting.
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "resolveJsonModule": false,
+
+    // --- Interop / erasability ---------------------------------------------
+    // verbatimModuleSyntax: no import elision surprises; forces `import type`.
+    // erasableSyntaxOnly: bans enum / namespace / parameter properties /
+    //   import=. A combinator library has no business emitting runtime
+    //   constructs, and this keeps `node --experimental-strip-types src/**`
+    //   viable for consumers reading the source.
+    // isolatedModules: redundant while verbatimModuleSyntax is on (TS7's
+    //   GetIsolatedModules() returns true if EITHER is set) - kept as explicit
+    //   documentation of intent. isolatedDeclarations is deliberately NOT set
+    //   here; it is enabled only in tsconfig.json (src/), see that file.
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+
+    // --- Strictness ---------------------------------------------------------
+    // `strict` is true by default in TS 7; stated anyway so the config is
+    // self-documenting and survives being read by a human.
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+
+    // --- Ambient types ------------------------------------------------------
+    // TS 7 default is already [], restated because it is load-bearing here:
+    // the published .d.ts must not silently depend on @types/* from devDeps.
+    "types": [],
+
+    // --- Declaration quality (the product) ---------------------------------
+    "declaration": true,
+    "declarationMap": true,
+    "stripInternal": true,
+
+    "skipLibCheck": false,
+    "noEmitOnError": true
+  }
+}

@@ -1,0 +1,198 @@
+{
+  "name": "smullyan",
+  "version": "0.0.0",
+  "description": "A fully typesafe functional programming library for TypeScript: combinatory-logic bird combinators plus Option, Result, Task, Reader, pipe and flow.",
+  "keywords": [
+    "functional-programming",
+    "fp",
+    "combinator",
+    "combinatory-logic",
+    "smullyan",
+    "mockingbird",
+    "bluebird",
+    "kestrel",
+    "starling",
+    "y-combinator",
+    "fixed-point",
+    "compose",
+    "pipe",
+    "flow",
+    "currying",
+    "point-free",
+    "option",
+    "maybe",
+    "result",
+    "either",
+    "task",
+    "reader",
+    "monad",
+    "applicative",
+    "functor",
+    "typescript",
+    "type-safe",
+    "type-level",
+    "zero-dependency",
+    "tree-shakable"
+  ],
+  "homepage": "https://github.com/phyter1/smullyan#readme",
+  "bugs": {
+    "url": "https://github.com/phyter1/smullyan/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phyter1/smullyan.git"
+  },
+  "license": "MIT",
+  "author": "phyter1 (https://github.com/phyter1)",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./birds": {
+      "import": {
+        "types": "./dist/birds.d.mts",
+        "default": "./dist/birds.mjs"
+      },
+      "require": {
+        "types": "./dist/birds.d.cts",
+        "default": "./dist/birds.cjs"
+      }
+    },
+    "./option": {
+      "import": {
+        "types": "./dist/option.d.mts",
+        "default": "./dist/option.mjs"
+      },
+      "require": {
+        "types": "./dist/option.d.cts",
+        "default": "./dist/option.cjs"
+      }
+    },
+    "./result": {
+      "import": {
+        "types": "./dist/result.d.mts",
+        "default": "./dist/result.mjs"
+      },
+      "require": {
+        "types": "./dist/result.d.cts",
+        "default": "./dist/result.cjs"
+      }
+    },
+    "./task": {
+      "import": {
+        "types": "./dist/task.d.mts",
+        "default": "./dist/task.mjs"
+      },
+      "require": {
+        "types": "./dist/task.d.cts",
+        "default": "./dist/task.cjs"
+      }
+    },
+    "./reader": {
+      "import": {
+        "types": "./dist/reader.d.mts",
+        "default": "./dist/reader.mjs"
+      },
+      "require": {
+        "types": "./dist/reader.d.cts",
+        "default": "./dist/reader.cjs"
+      }
+    },
+    "./pipe": {
+      "import": {
+        "types": "./dist/pipe.d.mts",
+        "default": "./dist/pipe.mjs"
+      },
+      "require": {
+        "types": "./dist/pipe.d.cts",
+        "default": "./dist/pipe.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "build:watch": "tsdown --watch",
+    "typecheck": "tsc -p tsconfig.json",
+    "typecheck:test": "tsc -p test/tsconfig.json",
+    "typecheck:tools": "tsc -p tsconfig.tools.json",
+    "typecheck:all": "pnpm run typecheck && pnpm run typecheck:test && pnpm run typecheck:tools",
+    "check:dts-emit": "tsc -p tsconfig.build.json --outDir .types-reference",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "fix": "pnpm run lint:fix && pnpm run format",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:types": "vitest run --typecheck.only",
+    "test:coverage": "vitest run --coverage",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck:all && pnpm run test:coverage",
+    "check:publint": "publint --strict",
+    "verify:package": "bash scripts/verify-package.sh",
+    "check:package": "pnpm run build && pnpm run check:dts-emit && pnpm run verify:package",
+    "ci": "pnpm run check && pnpm run check:package",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm run build && changeset publish",
+    "prepare": "lefthook install || true",
+    "hooks:check": "lefthook run pre-commit --all-files",
+    "hooks:uninstall": "lefthook uninstall",
+    "secrets:scan": "gitleaks git --redact --no-banner --exit-code 1 .",
+    "commits:check": "convco check",
+    "convco:verify": "convco config | grep -q 'birds' || { echo 'ERROR: .convco failed to parse - convco fell back to DEFAULTS and the scope allowlist is NOT enforced.'; exit 1; }"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "@changesets/changelog-github": "0.7.0",
+    "@changesets/cli": "2.31.1",
+    "@fast-check/vitest": "0.4.1",
+    "@types/node": "24.13.3",
+    "@vitest/coverage-v8": "4.1.10",
+    "expect-type": "1.4.0",
+    "fast-check": "4.9.0",
+    "lefthook": "2.1.10",
+    "oxfmt": "0.62.0",
+    "oxlint": "1.77.0",
+    "oxlint-tsgolint": "7.0.2001",
+    "publint": "0.3.23",
+    "tsdown": "0.22.14",
+    "typescript": "7.0.2",
+    "vite": "8.2.0",
+    "vitest": "4.1.10"
+  },
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=24.11.0",
+      "onFail": "error"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  }
+}

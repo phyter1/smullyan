@@ -1,0 +1,11 @@
+# Fingerprints of findings that have been reviewed and confirmed NOT to be
+# secrets. One per line, in the form:
+#
+#   <commit-sha>:<file-path>:<rule-id>:<start-line>
+#
+# Get the fingerprint from a verbose scan:
+#   gitleaks git --staged -v
+#
+# Prefer this file over widening an allowlist in .gitleaks.toml: an entry here
+# silences exactly one occurrence and shows up in `git blame`, whereas an
+# allowlist silences a whole class of findings forever.
