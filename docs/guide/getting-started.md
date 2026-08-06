@@ -93,7 +93,7 @@ import { pipe } from 'smullyan/pipe';
 const port = pipe(
   Option.fromNullable(process.env.PORT),
   Option.map(Number),
-  Option.filter(Number.isInteger),
+  Option.filter((n: number) => Number.isInteger(n)),
   Option.getOrElse(() => 3000),
 );
 

@@ -33,7 +33,7 @@ import { pipe } from 'smullyan/pipe';
 pipe(
   Option.fromNullable(input),
   Option.map(Number),
-  Option.filter(Number.isInteger),
+  Option.filter((n: number) => Number.isInteger(n)),
   Option.getOrElse(() => 0),
 );
 ```
