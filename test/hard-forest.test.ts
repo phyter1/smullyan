@@ -16,7 +16,7 @@ describe('hard forest — runtime', () => {
   it('M applies a function to itself', () => {
     // Safe because `answer` ignores its argument, so it terminates.
     // M(M) would also type-check — and would loop forever. That term is Ω.
-    const answer: SelfApplicable<number> = () => 42;
+    const answer: SelfApplicable<number> = (_self) => 42;
     expect(M(answer)).toBe(42);
   });
 
@@ -32,7 +32,7 @@ describe('hard forest — runtime', () => {
   });
 
   it('L self-applies its second argument', () => {
-    const five: SelfApplicable<number> = () => 5;
+    const five: SelfApplicable<number> = (_self) => 5;
     expect(L(inc)(five)).toBe(6);
   });
 
@@ -42,7 +42,7 @@ describe('hard forest — runtime', () => {
   });
 
   it('U applies its self-application to the second argument', () => {
-    const stop: TuringSelf<number> = () => () => 0;
+    const stop: TuringSelf<number> = (_self) => () => 0;
     expect(U(stop)(inc)).toBe(1);
   });
 
@@ -91,12 +91,12 @@ describe('hard forest — algebraic laws', () => {
   });
 
   test.prop([fc.integer()])('L f y ≡ f (M y)', (x) => {
-    const val: SelfApplicable<number> = () => x;
+    const val: SelfApplicable<number> = (_self) => x;
     expect(L(inc)(val)).toBe(inc(M(val)));
   });
 
   test.prop([fc.integer()])('M y ≡ y y  (the definition, checked directly)', (x) => {
-    const val: SelfApplicable<number> = () => x;
+    const val: SelfApplicable<number> = (_self) => x;
     expect(M(val)).toBe(val(val));
   });
 });
