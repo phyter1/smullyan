@@ -33,9 +33,19 @@ pre-commit:
     # repo is unrecoverable — rotation is the only remedy — so this is the one
     # gate that must never be skipped.
     - name: secrets
-      run: gitleaks git --staged --redact --no-banner --exit-code 1 .
+      # `command -v` first so a MISSING binary reports as missing rather than as
+      # a leak. Without it gitleaks exits 127 and lefthook prints the fail_text
+      # below, sending you hunting for a secret that was never found.
+      run: |
+        command -v gitleaks >/dev/null 2>&1 || {
+          echo "gitleaks is not installed. Install it with: brew install gitleaks" >&2
+          echo "It is required: a leaked secret in git history is unrecoverable." >&2
+          exit 1
+        }
+        gitleaks git --staged --redact --no-banner --exit-code 1 .
       fail_text: |
-        gitleaks found a probable secret in your staged changes.
+        gitleaks found a probable secret in your staged changes,
+        OR gitleaks is not installed (see the message above).
         If it is real: rotate it first, then remove it. Do not "fix it later".
         If it is a false positive: prefer a fingerprint in .gitleaksignore over
         widening .gitleaks.toml.

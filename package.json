@@ -153,7 +153,7 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm run build && changeset publish",
-    "prepare": "lefthook install || true",
+    "prepare": "sh -c '[ -n \"$CI\" ] && exit 0; lefthook install' || true",
     "hooks:check": "lefthook run pre-commit --all-files",
     "hooks:uninstall": "lefthook uninstall",
     "secrets:scan": "gitleaks git --redact --no-banner --exit-code 1 .",
