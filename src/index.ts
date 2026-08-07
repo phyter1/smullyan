@@ -1,24 +1,31 @@
 /**
  * smullyan — a fully typesafe functional programming library for TypeScript.
  *
- * The birds and `pipe`/`flow` are re-exported directly: their names are
+ * This root entry re-exports the birds and `pipe`/`flow`, whose names are
  * distinct and unambiguous.
  *
- * The ADTs are exported as NAMESPACES, not flattened. `Option`, `Result`,
- * `Task` and `Reader` each define `map`, `flatMap`, `match`, `getOrElse` and
- * friends — flattening them here would collide, and picking a winner would be
- * arbitrary. Importing the subpath directly is preferred either way, since it
- * tree-shakes without relying on the bundler seeing through this barrel:
+ * The ADTs are NOT re-exported here. Import them from their subpaths:
  *
  * ```ts
- * import * as O from 'smullyan/option'
- * import { Option } from 'smullyan'      // also works
+ * import * as Option from 'smullyan/option'
+ * import * as Result from 'smullyan/result'
+ * import * as Task from 'smullyan/task'
+ * import * as Reader from 'smullyan/reader'
  * ```
+ *
+ * Two reasons, one principled and one empirical:
+ *
+ * 1. Each ADT defines `map`, `flatMap`, `match` and `getOrElse`. Flattening
+ *    them here would collide, and namespacing them at the root would just be a
+ *    second way to spell the subpath import.
+ *
+ * 2. `export * as Ns from './x'` made rolldown build a namespace object, place
+ *    it in a chunk shared with the `x` entry point, and re-export it from there
+ *    under a minified name — leaking `export { ... as t }` into the PUBLIC API
+ *    of `smullyan/result`. publint and attw both pass such an export, because
+ *    it is structurally valid; it is simply not one anybody wrote. The
+ *    generated API reference caught it by diffing the built package's real
+ *    runtime exports against the documented ones.
  */
 export * from './birds/index';
 export * from './pipe/index';
-
-export * as Option from './option/index';
-export * as Result from './result/index';
-export * as Task from './task/index';
-export * as Reader from './reader/index';

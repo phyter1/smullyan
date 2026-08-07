@@ -1,11 +1,13 @@
 # smullyan
 
+**[Documentation](https://phyter1.github.io/smullyan/)** · [Getting started](https://phyter1.github.io/smullyan/guide/getting-started) · [The aviary](https://phyter1.github.io/smullyan/reference/aviary) · [API](https://phyter1.github.io/smullyan/reference/api)
+
 A fully typesafe functional programming library for TypeScript: the
 combinatory-logic **bird combinators** of Raymond Smullyan's _To Mock a
 Mockingbird_, plus a small core of algebraic data types.
 
 > **Status: pre-release.** Feature-complete against the original plan: all
-> thirty-five combinators including the hard forest, plus `Option`, `Result`,
+> thirty-six combinators including the hard forest, plus `Option`, `Result`,
 > `Task`, `Reader`, `pipe` and `flow`. The API is unlikely to change, but treat
 > it as unstable until `1.0.0`.
 
@@ -29,7 +31,7 @@ programmers already reach for:
 | Vireo    | `V x y f = f x y`       | `pair`         |
 | Sage     | `Y f = f (Y f)`         | `fix`          |
 
-All thirty-five are implemented. The full aviary, with each bird's definition
+All thirty-six are implemented. The full aviary, with each bird's definition
 and its typing notes, lives in [`src/birds`](./src/birds).
 
 ## Install
