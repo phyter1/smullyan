@@ -387,7 +387,7 @@ GENERIC SCOPING — the rule every combinator here must follow:
 Each type parameter belongs on the call signature that SUPPLIES it, never
 on an earlier one. Writing the signature as
 
-  <A, B, C>(f: (b: B) => C): (g: (a: A) => B) => (a: A) => C
+  &lt;A, B, C>(f: (b: B) => C): (g: (a: A) => B) => (a: A) => C
 
 compiles fine and is wrong: `A` appears nowhere in `f`, so at the first call
 TypeScript has nothing to infer it from and silently defaults it to
@@ -2187,7 +2187,7 @@ Argument duplication: hand the same value to a curried binary function twice.
 `W K ≡ I` — the Warbler applied to the Kestrel reconstructs the Identity
 bird, since `K x x` discards the second copy. Asserted in the law suite.
 
-In monadic terms this is `join` for the Reader monad: a `Reader<R, Reader<R,
+In monadic terms this is `join` for the Reader monad: a `Reader&lt;R, Reader&lt;R,
 A>>` collapsed by supplying the same environment to both layers.
 
 <sup>Source: [`src/birds/warbler.ts`](https://github.com/phyter1/smullyan/blob/main/src/birds/warbler.ts)</sup>
@@ -2251,6 +2251,1046 @@ factorial(5) // 120
 ```
 
 <sup>Source: [`src/birds/sage.ts`](https://github.com/phyter1/smullyan/blob/main/src/birds/sage.ts)</sup>
+
+## `smullyan/agent`
+
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`Attempts`](#attempts) | interface | How many times a call may run in total, including the first. |
+| [`backingOff`](#backingoff) | const | Wait according to this schedule between attempts. |
+| [`Backoff`](#backoff) | type | A backoff schedule, as data. |
+| [`callingApi`](#callingapi) | const | Lift an async call into a tool, classifying whatever it throws. |
+| [`cappedAt`](#cappedat) | const | Never wait longer than this, however the schedule grows. |
+| [`ClockBound`](#clockbound) | interface | The phrases that need a delay capability. |
+| [`delayFor`](#delayfor) | const | The delay before attempt `n`, zero-indexed — `delayFor(b, 0)` precedes the FIRST retry, not the first call. |
+| [`denied`](#denied) | const | The caller lacks permission. |
+| [`Denied`](#denied) | interface | The caller is not permitted to do this. |
+| [`Duration`](#duration) | interface | The readable dialect. |
+| [`everyTime`](#everytime) | const | Wait the same duration before each retry. |
+| [`explain`](#explain) | const | A sentence written for a language model to read. |
+| [`exponential`](#exponential) | const | Retry after a geometrically growing delay. |
+| [`Exponential`](#exponential) | interface | Wait `baseMs * factor^n`, optionally capped. |
+| [`exponentiallyFrom`](#exponentiallyfrom) | const | Wait a geometrically growing duration, doubling by default. |
+| [`fail`](#fail) | const | A tool call that always fails with `e`. |
+| [`fallingBackTo`](#fallingbackto) | const | On failure, run this instead. |
+| [`fixed`](#fixed) | const | Retry after a constant delay. |
+| [`Fixed`](#fixed) | interface | Wait the same amount before every retry. |
+| [`flatMap`](#flatmap) | const | Chain another tool call onto a successful result. |
+| [`fromPromise`](#frompromise) | const | Lift a promise-returning function, classifying anything it throws. |
+| [`fromThrown`](#fromthrown) | const | Classify a thrown value. |
+| [`ignoringServerAdvice`](#ignoringserveradvice) | const | Follow the local schedule even when the server sent a `Retry-After`. |
+| [`immediate`](#immediate) | const | Retry with no delay. |
+| [`Immediate`](#immediate) | interface | Retry immediately. |
+| [`immediately`](#immediately) | const | Retry with no delay at all. |
+| [`inMillis`](#inmillis) | const | The duration in milliseconds. |
+| [`invalidArgs`](#invalidargs) | const | Arguments failed validation. |
+| [`InvalidArgs`](#invalidargs) | interface | Arguments failed validation before the tool ran. |
+| [`isRetryable`](#isretryable) | const | Which failures are worth repeating. |
+| [`map`](#map) | const | Apply a function to a successful result. |
+| [`millis`](#millis) | const | A duration in milliseconds. |
+| [`minutes`](#minutes) | const | A duration in minutes. |
+| [`notFound`](#notfound) | const | The thing asked for does not exist. |
+| [`NotFound`](#notfound) | interface | Dotted path to the offending argument, e.g. |
+| [`onceOnly`](#onceonly) | const | A budget of exactly one attempt — never retry. |
+| [`orDefaultingTo`](#ordefaultingto) | const | On failure, succeed with this value instead. |
+| [`orElse`](#orelse) | const | Fall back to another tool call on failure. |
+| [`parse`](#parse) | const | Validate an unknown value — typically JSON that came back over a wire — as a {@link ToolError}. |
+| [`rateLimited`](#ratelimited) | const | The tool was rate limited. |
+| [`RateLimited`](#ratelimited) | interface | A closed, serializable vocabulary of tool failures. |
+| [`retry`](#retry) | const | Total attempts, INCLUDING the first. |
+| [`RetryClause`](#retryclause) | type | One clause of a retry policy. |
+| [`RetryPolicy`](#retrypolicy) | interface | How to retry, as data. |
+| [`seconds`](#seconds) | const | A duration in seconds. |
+| [`Sleep`](#sleep) | type | A delay capability. |
+| [`succeed`](#succeed) | const | A tool call that always succeeds with `a`. |
+| [`suggestedDelayMs`](#suggesteddelayms) | const | How long the error itself says to wait, if it says anything. |
+| [`theValue`](#thevalue) | const | A tool that always succeeds with this value. |
+| [`timedOut`](#timedout) | const | The tool exceeded its time budget. |
+| [`timeout`](#timeout) | const | Fail with {@link Timeout} if the call has not settled within `ms`. |
+| [`Timeout`](#timeout) | interface | Near-misses worth trying instead, if the tool can suggest any. |
+| [`Tool`](#tool) | type | A tool call: an asynchronous operation that has not started yet and reports failure in its type. |
+| [`ToolError`](#toolerror) | type | Everything a tool call is allowed to fail with. |
+| [`unavailable`](#unavailable) | const | The tool is temporarily unusable. |
+| [`Unavailable`](#unavailable) | interface | The tool exists but is temporarily unusable — upstream 5xx, cold start, outage. |
+| [`Unknown`](#unknown) | interface | The capability that was missing, when it can be named. |
+| [`unknownError`](#unknownerror) | const | An unclassifiable failure. |
+| [`upTo`](#upto) | const | An attempt budget, written as `upTo(4).attempts`. |
+| [`whileFailing`](#whilefailing) | const | Retry only failures matching this predicate. |
+| [`whileTransient`](#whiletransient) | const | Retry any failure the vocabulary considers transient. |
+| [`withClock`](#withclock) | const | Retry according to the given clauses, in any order. |
+| [`withDefault`](#withdefault) | const | Supply a value on failure, ending the failure channel. |
+| [`within`](#within) | const | An attempt budget, as a clause. |
+
+### Attempts
+
+```ts
+interface Attempts {
+  readonly _tag: 'Attempts';
+  readonly total: number;
+}
+```
+
+How many times a call may run in total, including the first.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### backingOff
+
+```ts
+const backingOff: (backoff: Backoff) => RetryClause
+```
+
+Wait according to this schedule between attempts.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### Backoff
+
+```ts
+type Backoff = Fixed | Exponential | Immediate
+```
+
+A backoff schedule, as data.
+
+Data rather than a closure so a policy can be logged, persisted alongside a
+durable run, and shown to a model that is deciding whether to keep waiting.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### callingApi
+
+```ts
+const callingApi: <A>(
+  invoke: () => Promise<A>,
+  classify?: (e: unknown) => ToolError,
+) => Tool<A>
+```
+
+Lift an async call into a tool, classifying whatever it throws.
+
+```ts
+callingApi(() => gh.issues.get(id), asGithubError)
+```
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### cappedAt
+
+```ts
+const cappedAt: (d: Duration) => (b: Backoff) => Backoff
+```
+
+Never wait longer than this, however the schedule grows.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### ClockBound
+
+```ts
+interface ClockBound {
+  /**
+   * Retry according to the given clauses, in any order.
+   *
+   * Accepts `upTo(n).attempts` directly as well as `within(...)`.
+   */
+  readonly retrying: (
+    ...clauses: ReadonlyArray<RetryClause | Attempts>
+  ) => <A>(tool: Tool<A>) => Tool<A>;
+  /** Fail with a `Timeout` if the call has not answered within this duration. */
+  readonly givingUpAfter: (d: Duration) => <A>(tool: Tool<A>) => Tool<A>;
+}
+```
+
+The phrases that need a delay capability.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### delayFor
+
+```ts
+const delayFor: (backoff: Backoff, attempt: number) => number
+```
+
+The delay before attempt `n`, zero-indexed — `delayFor(b, 0)` precedes the
+FIRST retry, not the first call.
+
+Pure, so a schedule can be asserted without running anything.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### denied
+
+```ts
+const denied: (reason: string, required?: string) => ToolError
+```
+
+The caller lacks permission.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### Denied
+
+```ts
+interface Denied {
+  readonly _tag: 'Denied';
+  readonly reason: string;
+  /** The capability that was missing, when it can be named. */
+  readonly required?: string;
+}
+```
+
+The caller is not permitted to do this. Retrying will not help.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### Duration
+
+```ts
+interface Duration {
+  readonly _tag: 'Duration';
+  readonly ms: number;
+}
+```
+
+The readable dialect.
+
+Everything here is a renaming of {@link ./tool} — no new behaviour — chosen so
+that a call site states its own meaning and a reader (human or model) does not
+have to fetch a signature to understand it.
+
+## The problem this solves
+
+`timeout(30)` is ambiguous: milliseconds or seconds? `retry({ times: 4 })`
+is ambiguous: is the first call one of the four? Those facts live in
+documentation, so anyone writing code without that documentation loaded
+guesses — plausibly, and often wrongly.
+
+Wrapping the scalar removes the guess. `seconds(30)` cannot be misread.
+`upTo(4).attempts` settles the off-by-one at the call site. `whileFailing
+(isTransient)` says which failures repeat without anyone looking up a default.
+
+## Why the clock is bound once
+
+Both retrying and timing out need a delay capability, and threading a `sleep`
+argument through every phrase would reintroduce exactly the noise this
+dialect exists to remove. {@link withClock} binds it once at the edge and
+returns the phrases that need it.
+
+@example
+```ts
+const { retrying, givingUpAfter } = withClock(systemClock)
+
+const fetchIssue = pipe(
+  callingApi(() => gh.issues.get(id)),
+  retrying(
+    whileFailing(isTransient),
+    upTo(4).attempts,
+    backingOff(exponentiallyFrom(millis(100))),
+  ),
+  givingUpAfter(seconds(10)),
+  fallingBackTo(theValue('degraded')),
+)
+```
+/
+
+// --- Durations -------------------------------------------------------------
+
+/** A length of time. Constructed by unit, so a call site cannot be misread.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### everyTime
+
+```ts
+const everyTime: (d: Duration) => Backoff
+```
+
+Wait the same duration before each retry.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### explain
+
+```ts
+const explain: (e: ToolError) => string
+```
+
+A sentence written for a language model to read.
+
+Not a log line. Each message states what failed AND what to do differently,
+because the consumer is a model deciding its next action. `NotFound` offers
+suggestions; `InvalidArgs` names the path and what was expected; `Denied`
+says explicitly not to retry.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### exponential
+
+```ts
+const exponential: (baseMs: number, factor?: number, maxMs?: number) => Backoff
+```
+
+Retry after a geometrically growing delay.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### Exponential
+
+```ts
+interface Exponential {
+  readonly _tag: 'Exponential';
+  readonly baseMs: number;
+  readonly factor: number;
+  readonly maxMs?: number;
+}
+```
+
+Wait `baseMs * factor^n`, optionally capped.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### exponentiallyFrom
+
+```ts
+const exponentiallyFrom: (d: Duration, doubling?: number) => Backoff
+```
+
+Wait a geometrically growing duration, doubling by default.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### fail
+
+```ts
+const fail: <A>(e: ToolError) => Tool<A>
+```
+
+A tool call that always fails with `e`.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### fallingBackTo
+
+```ts
+const fallingBackTo: <A>(alternative: () => Tool<A>) => (tool: Tool<A>) => Tool<A>
+```
+
+On failure, run this instead.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### fixed
+
+```ts
+const fixed: (ms: number) => Backoff
+```
+
+Retry after a constant delay.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### Fixed
+
+```ts
+interface Fixed {
+  readonly _tag: 'Fixed';
+  readonly ms: number;
+}
+```
+
+Wait the same amount before every retry.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### flatMap
+
+```ts
+const flatMap: <A, B>(f: (a: A) => Tool<B>) => (tool: Tool<A>) => Tool<B>
+```
+
+Chain another tool call onto a successful result.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### fromPromise
+
+```ts
+const fromPromise: <A>(
+  f: () => Promise<A>,
+  classify?: (e: unknown) => ToolError,
+) => Tool<A>
+```
+
+Lift a promise-returning function, classifying anything it throws.
+
+The boundary where an ordinary async API becomes a `Tool`. Pass `classify` to
+map your client's failures onto the vocabulary — an HTTP 429 to
+`rateLimited`, a 404 to `notFound` — so the model receives something it can
+act on rather than a stringified exception.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### fromThrown
+
+```ts
+const fromThrown: (e: unknown) => ToolError
+```
+
+Classify a thrown value.
+
+The boundary between "something was thrown" and this vocabulary. Deliberately
+conservative: anything it cannot confidently classify becomes {@link Unknown}
+with the original value attached, rather than being guessed into a variant
+that would change retry behaviour.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### ignoringServerAdvice
+
+```ts
+const ignoringServerAdvice: RetryClause
+```
+
+Follow the local schedule even when the server sent a `Retry-After`.
+
+Rarely what you want — the server's advice is better information than a local
+guess — which is why it must be asked for by name.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### immediate
+
+```ts
+const immediate: Backoff
+```
+
+Retry with no delay.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### Immediate
+
+```ts
+interface Immediate {
+  readonly _tag: 'Immediate';
+}
+```
+
+Retry immediately.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### immediately
+
+```ts
+const immediately: Backoff
+```
+
+Retry with no delay at all.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### inMillis
+
+```ts
+const inMillis: (d: Duration) => number
+```
+
+The duration in milliseconds.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### invalidArgs
+
+```ts
+const invalidArgs: (path: string, expected: string, got: unknown) => ToolError
+```
+
+Arguments failed validation.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### InvalidArgs
+
+```ts
+interface InvalidArgs {
+  readonly _tag: 'InvalidArgs';
+  /** Dotted path to the offending argument, e.g. `"filters.since"`. */
+  readonly path: string;
+  readonly expected: string;
+  readonly got: unknown;
+}
+```
+
+Arguments failed validation before the tool ran.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### isRetryable
+
+```ts
+const isRetryable: (e: ToolError) => boolean
+```
+
+Which failures are worth repeating.
+
+A total `Record` rather than a switch, so adding a variant to {@link ToolError}
+without deciding its retry behaviour is a COMPILE error — a missing key — not
+a silent default.
+/
+const RETRYABLE: Record&lt;ToolError['_tag'], boolean> = {
+  RateLimited: true,
+  Timeout: true,
+  Unavailable: true,
+  // Unclassified: assume transient once, and let the retry budget bound it.
+  Unknown: true,
+  // Repeating these produces the identical failure and burns context.
+  InvalidArgs: false,
+  Denied: false,
+  NotFound: false,
+};
+
+/**
+Is retrying this failure meaningful?
+
+`InvalidArgs` and `Denied` are excluded: the same call will fail identically,
+so retrying burns budget and, in an agent loop, burns context. The model
+should change the call instead — which is exactly what those variants carry
+enough information to do.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### map
+
+```ts
+const map: <A, B>(f: (a: A) => B) => (tool: Tool<A>) => Tool<B>
+```
+
+Apply a function to a successful result.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### millis
+
+```ts
+const millis: (n: number) => Duration
+```
+
+A duration in milliseconds.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### minutes
+
+```ts
+const minutes: (n: number) => Duration
+```
+
+A duration in minutes.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### notFound
+
+```ts
+const notFound: (searched: string, suggestions?: ReadonlyArray<string>) => ToolError
+```
+
+The thing asked for does not exist.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### NotFound
+
+```ts
+interface NotFound {
+  readonly _tag: 'NotFound';
+  readonly searched: string;
+  /** Near-misses worth trying instead, if the tool can suggest any. */
+  readonly suggestions?: ReadonlyArray<string>;
+}
+```
+
+Dotted path to the offending argument, e.g. `"filters.since"`. */
+  readonly path: string;
+  readonly expected: string;
+  readonly got: unknown;
+}
+
+/** The tool ran and the thing asked for does not exist.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### onceOnly
+
+```ts
+const onceOnly: Attempts
+```
+
+A budget of exactly one attempt — never retry.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### orDefaultingTo
+
+```ts
+const orDefaultingTo: <A>(value: A) => (tool: Tool<A>) => Tool<A>
+```
+
+On failure, succeed with this value instead.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### orElse
+
+```ts
+const orElse: <A>(alternative: (e: ToolError) => Tool<A>) => (tool: Tool<A>) => Tool<A>
+```
+
+Fall back to another tool call on failure.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### parse
+
+```ts
+const parse: (u: unknown) => Option<ToolError>
+```
+
+Validate an unknown value — typically JSON that came back over a wire — as a
+{@link ToolError}.
+
+The whole point of this module is that errors cross boundaries, and anything
+that crosses a boundary comes back as `unknown`. Returning `Option` rather
+than casting keeps that honest: a malformed envelope is absence, not a
+`ToolError`-shaped lie.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### rateLimited
+
+```ts
+const rateLimited: (retryAfterMs: number, limit?: string) => ToolError
+```
+
+The tool was rate limited.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### RateLimited
+
+```ts
+interface RateLimited {
+  readonly _tag: 'RateLimited';
+  readonly retryAfterMs: number;
+  readonly limit?: string;
+}
+```
+
+A closed, serializable vocabulary of tool failures.
+
+## Why this exists
+
+When a tool call fails inside an agent loop, the failure has to travel: back
+through a tool-result envelope, into the model's context, often across a
+process or network boundary, and frequently into durable state so a run can
+be resumed. A thrown `Error` survives none of that — `JSON.stringify(new
+Error('x'))` is `{}` — and a stringly-typed message gives the model nothing
+to branch on.
+
+Every variant here is a plain object with a `_tag` and fields chosen so that
+BOTH a program and a language model can act on them. `RateLimited` carries
+how long to wait. `InvalidArgs` carries which argument path was wrong and
+what arrived. `NotFound` carries what was searched for, so the model can try
+a different query rather than repeat the same one.
+
+## Closed on purpose
+
+The union is closed so `match` is exhaustive and adding a variant is a
+compile error at every call site. {@link Unknown} is the escape hatch for
+genuinely unclassifiable failures — it carries the original value as
+`unknown` rather than pretending it was an `Error`.
+/
+
+/** The tool was rate limited. `retryAfterMs` is the server's advice, when given.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### retry
+
+```ts
+const retry: (policy: RetryPolicy) => <A>(tool: Tool<A>) => Tool<A>
+```
+
+Total attempts, INCLUDING the first. `times: 1` never retries. */
+  readonly times: number;
+  readonly backoff: Backoff;
+  readonly sleep: Sleep;
+  /**
+Which failures are worth repeating. Required, not defaulted: retrying an
+`InvalidArgs` is always wrong, and a silent default would hide that.
+{@link isRetryable} is the sensible choice for {@link ToolError}.
+/
+  readonly retryOn: (e: ToolError) => boolean;
+  /**
+Prefer the delay the error itself advises over the backoff schedule.
+Only `RateLimited` carries one. Defaults to true — a server's `Retry-After`
+is better information than any local guess.
+/
+  readonly respectRetryAfter?: boolean;
+}
+
+/**
+Retry a tool call according to a policy.
+
+Stops at the first success, the first non-retryable failure, or when the
+attempt budget is spent — whichever comes first. The failure returned is
+always the LAST one seen, so the caller sees why it finally gave up rather
+than why it first stumbled.
+
+@example
+```ts
+const sleep: Sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+const resilient = retry({
+  times: 4,
+  backoff: exponential(200, 2, 5_000),
+  sleep,
+  retryOn: isRetryable,
+})(fetchIssue)
+```
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### RetryClause
+
+```ts
+type RetryClause = WhileFailing | Budget | BackingOff | IgnoringServerAdvice
+```
+
+One clause of a retry policy.
+
+Clauses are order-independent and each names its own role, so a policy reads
+as a sentence and cannot be assembled by positional accident.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### RetryPolicy
+
+```ts
+interface RetryPolicy {
+  /** Total attempts, INCLUDING the first. `times: 1` never retries. */
+  readonly times: number;
+  readonly backoff: Backoff;
+  readonly sleep: Sleep;
+  /**
+   * Which failures are worth repeating. Required, not defaulted: retrying an
+   * `InvalidArgs` is always wrong, and a silent default would hide that.
+   * {@link isRetryable} is the sensible choice for {@link ToolError}.
+   */
+  readonly retryOn: (e: ToolError) => boolean;
+  /**
+   * Prefer the delay the error itself advises over the backoff schedule.
+   * Only `RateLimited` carries one. Defaults to true — a server's `Retry-After`
+   * is better information than any local guess.
+   */
+  readonly respectRetryAfter?: boolean;
+}
+```
+
+How to retry, as data.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### seconds
+
+```ts
+const seconds: (n: number) => Duration
+```
+
+A duration in seconds.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### Sleep
+
+```ts
+type Sleep = (ms: number) => Promise<void>
+```
+
+A delay capability.
+
+Supply your host's timer once, at the edge:
+
+```ts
+const sleep: Sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+```
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### succeed
+
+```ts
+const succeed: <A>(a: A) => Tool<A>
+```
+
+A tool call that always succeeds with `a`.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### suggestedDelayMs
+
+```ts
+const suggestedDelayMs: (e: ToolError) => Option<number>
+```
+
+How long the error itself says to wait, if it says anything.
+
+Only `RateLimited` carries server advice. Everything else defers to the
+caller's backoff policy.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### theValue
+
+```ts
+const theValue: <A>(a: A) => () => Tool<A>
+```
+
+A tool that always succeeds with this value. Reads well inside `fallingBackTo`.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### timedOut
+
+```ts
+const timedOut: (afterMs: number) => ToolError
+```
+
+The tool exceeded its time budget.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### timeout
+
+```ts
+const timeout: (ms: number, sleep: Sleep) => <A>(tool: Tool<A>) => Tool<A>
+```
+
+Fail with {@link Timeout} if the call has not settled within `ms`.
+
+The underlying work is NOT cancelled — JavaScript has no general mechanism to
+do so, and pretending otherwise would be a lie. It races the call against the
+clock and reports which won. If cancellation matters, the tool itself must
+accept an `AbortSignal`; this bounds how long you *wait*, not how long the
+work *runs*.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### Timeout
+
+```ts
+interface Timeout {
+  readonly _tag: 'Timeout';
+  readonly afterMs: number;
+}
+```
+
+Near-misses worth trying instead, if the tool can suggest any. */
+  readonly suggestions?: ReadonlyArray&lt;string>;
+}
+
+/** The tool did not answer within its budget.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### Tool
+
+```ts
+type Tool<A> = TaskResult<ToolError, A>
+```
+
+A tool call: an asynchronous operation that has not started yet and reports
+failure in its type.
+
+```ts
+type Tool<A> = () => Promise<Result<ToolError, A>>
+```
+
+The thunk is what makes retry and timeout possible at all. A `Promise` has
+already started and has cached its outcome, so it cannot be re-run; a `Tool`
+is a *description* of a call, and every combinator here is just a way of
+describing a different call in terms of it.
+
+## The clock is injected
+
+`setTimeout` is a host API, not an ECMAScript one, and this library
+guarantees its published declarations carry no ambient dependency. So
+anything that waits takes a {@link Sleep} rather than reaching for a global.
+
+That constraint turned out to be a feature. Backoff schedules are pure data
+and a fake clock makes them testable exactly, with no wall-clock waiting:
+
+```ts
+const waits: number[] = []
+const fake: Sleep = async (ms) => { waits.push(ms) }
+await retry({ times: 3, backoff: exponential(100), sleep: fake, retryOn }) (t)()
+// waits === [100, 200]  — asserted, not slept through
+```
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### ToolError
+
+```ts
+type ToolError =
+  | RateLimited
+  | InvalidArgs
+  | NotFound
+  | Timeout
+  | Unavailable
+  | Denied
+  | Unknown
+```
+
+Everything a tool call is allowed to fail with.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### unavailable
+
+```ts
+const unavailable: (reason: string, status?: number) => ToolError
+```
+
+The tool is temporarily unusable.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### Unavailable
+
+```ts
+interface Unavailable {
+  readonly _tag: 'Unavailable';
+  readonly reason: string;
+  readonly status?: number;
+}
+```
+
+The tool exists but is temporarily unusable — upstream 5xx, cold start, outage.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### Unknown
+
+```ts
+interface Unknown {
+  readonly _tag: 'Unknown';
+  readonly message: string;
+  readonly cause?: unknown;
+}
+```
+
+The capability that was missing, when it can be named. */
+  readonly required?: string;
+}
+
+/** Unclassifiable failure. Carries the original value without lying about its type.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### unknownError
+
+```ts
+const unknownError: (message: string, cause?: unknown) => ToolError
+```
+
+An unclassifiable failure.
+
+<sup>Source: [`src/agent/error.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/error.ts)</sup>
+
+### upTo
+
+```ts
+const upTo: (n: number) => { readonly attempts: Attempts }
+```
+
+An attempt budget, written as `upTo(4).attempts`.
+
+The trailing `.attempts` is the point: it makes the unit explicit and settles
+the perennial off-by-one. Four attempts means one call and three retries.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### whileFailing
+
+```ts
+const whileFailing: (predicate: (e: ToolError) => boolean) => RetryClause
+```
+
+Retry only failures matching this predicate. Defaults to {@link isRetryable}.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### whileTransient
+
+```ts
+const whileTransient: RetryClause
+```
+
+Retry any failure the vocabulary considers transient.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### withClock
+
+```ts
+const withClock: (clock: Sleep) => ClockBound
+```
+
+Retry according to the given clauses, in any order.
+
+Accepts `upTo(n).attempts` directly as well as `within(...)`.
+/
+  readonly retrying: (
+    ...clauses: ReadonlyArray&lt;RetryClause | Attempts>
+  ) => &lt;A>(tool: Tool&lt;A>) => Tool&lt;A>;
+  /** Fail with a `Timeout` if the call has not answered within this duration. */
+  readonly givingUpAfter: (d: Duration) => &lt;A>(tool: Tool&lt;A>) => Tool&lt;A>;
+}
+
+/**
+Bind a clock once, at the edge, and get the phrases that need it.
+
+```ts
+const systemClock: Sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const { retrying, givingUpAfter } = withClock(systemClock)
+```
+
+In tests, pass a clock that records instead of waits — backoff schedules then
+become assertions rather than delays.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
+
+### withDefault
+
+```ts
+const withDefault: <A>(onError: (e: ToolError) => A) => (tool: Tool<A>) => Tool<A>
+```
+
+Supply a value on failure, ending the failure channel.
+
+<sup>Source: [`src/agent/tool.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/tool.ts)</sup>
+
+### within
+
+```ts
+const within: (a: Attempts) => RetryClause
+```
+
+An attempt budget, as a clause. `upTo(4).attempts` is accepted directly.
+
+<sup>Source: [`src/agent/phrases.ts`](https://github.com/phyter1/smullyan/blob/main/src/agent/phrases.ts)</sup>
 
 ## `smullyan/pipe`
 

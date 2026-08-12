@@ -49,6 +49,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     birds: 'src/birds/index.ts',
+    agent: 'src/agent/index.ts',
     option: 'src/option/index.ts',
     result: 'src/result/index.ts',
     task: 'src/task/index.ts',
