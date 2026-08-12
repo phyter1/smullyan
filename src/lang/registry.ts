@@ -12,7 +12,7 @@
  *
  * ```ts
  * // Spanish
- * encadenar(algo(20), mapear(incrementar), obtenerOSino(() => 0))
+ * encadenar(algo(20), mapear(incrementar), obtenerODefecto(() => 0))
  * // English — same program, mechanically derived
  * pipe(some(20), map(increment), getOrElse(() => 0))
  * ```
@@ -78,32 +78,139 @@ export const machineReviewed: Readonly<Record<Language, string | null>> = {
   es: '2026-08-12: three adversarial LLM passes, 29 corrections applied',
 };
 
+/** Where a contested name is actually used: one module, one concept. */
+export interface Site {
+  readonly module: string;
+  readonly concept: string;
+}
+
+/**
+ * A naming judgement call, pinned to the code it concerns.
+ *
+ * Structured rather than prose so the same gates that hold the vocabulary
+ * honest also hold the questions honest — see {@link openQuestions}.
+ */
+export interface OpenQuestion {
+  /** The dialect in question. Never the reference dialect. */
+  readonly language: Language;
+  /** The name currently shipped. Asserted to match the vocabulary. */
+  readonly current: string;
+  /** What a reviewer might choose instead. Never includes `current`. */
+  readonly alternatives: ReadonlyArray<string>;
+  /** Every place `current` is used. Multi-site names must agree everywhere. */
+  readonly sites: ReadonlyArray<Site>;
+  /** Why this is contested, in enough detail to answer without context. */
+  readonly question: string;
+}
+
 /**
  * Judgement calls a native speaker should settle. Recorded rather than silently
  * decided, because reviewers disagreed or the trade-off is genuinely regional.
  *
- * - `exito` / `acierto` for Ok — `exito` loses an accent and skews toward
- *   "achievement"; `acierto`/`fallo` is a cleaner native antonym pair.
- * - `desdeAnulable` — `anulable` means "voidable" in law, though Microsoft's
- *   Spanish docs do use it for nullable.
- * - `converger` / `convergir` — peninsular vs Latin American infinitive.
- * - `desdeSincrono` — `sincrono` (Spain, technical) vs `sincronico` (LatAm).
- * - `preguntar` for Reader's `ask` — arguably `pedir`, since it requests the
- *   environment rather than asking a question.
- * - `enlazar` for flatMap — a calque of "bind"; reads as "hyperlink" to some.
- * - `fluir` for flow — `fluir` is intransitive; `flujo` may read better.
- * - `par` for pair — also means "even number", though "par ordenado" is the
- *   standard mathematical term.
+ * These were free text once. That decayed: the registry shipped a comment
+ * arguing for `segun` long after the value became `plegar`, and a docblock
+ * example calling `obtenerOSino`, which no dialect exports. Prose beside gated
+ * data rots, because nothing makes it fail. So each question now names the
+ * sites it concerns and quotes the name in force, and a test asserts both —
+ * a rename cannot orphan the debate that produced it.
+ *
+ * Answering one means editing the vocabulary and deleting the entry here. The
+ * two move together or the build goes red.
  */
-export const openQuestions: ReadonlyArray<string> = [
-  'exito vs acierto for Ok',
-  'desdeAnulable (anulable = voidable in law)',
-  'converger vs convergir (regional)',
-  'desdeSincrono vs desdeSincronico (regional)',
-  'preguntar vs pedir for Reader.ask',
-  'enlazar for flatMap (calque of bind)',
-  'fluir vs flujo for flow',
-  'par for pair (also "even number")',
+export const openQuestions: ReadonlyArray<OpenQuestion> = [
+  {
+    language: 'es',
+    current: 'exito',
+    alternatives: ['acierto'],
+    sites: [{ module: 'result', concept: 'ok' }],
+    question:
+      '`exito` loses its accent as an identifier (`éxito`) and skews toward ' +
+      '"achievement" rather than "this computation succeeded". `acierto` pairs ' +
+      'with `fallo` as a native antonym; `exito`/`fallo` is a weaker opposition. ' +
+      'Which reads better at a call site — `esExito(r)` or `esAcierto(r)`?',
+  },
+  {
+    language: 'es',
+    current: 'desdeAnulable',
+    alternatives: ['desdeNulo', 'desdeOpcional'],
+    sites: [
+      { module: 'option', concept: 'fromNullable' },
+      { module: 'result', concept: 'fromNullable' },
+    ],
+    question:
+      '`anulable` primarily means "voidable" in a legal sense — a contract that ' +
+      "can be annulled. Microsoft's Spanish documentation does use it for " +
+      'nullable, which is the strongest argument for keeping it. Is that usage ' +
+      'established enough for a working developer, or is it jargon borrowed once?',
+  },
+  {
+    language: 'es',
+    current: 'converger',
+    alternatives: ['convergir'],
+    sites: [{ module: 'birds', concept: 'converge' }],
+    question:
+      'Both infinitives are attested: `converger` is more peninsular, `convergir` ' +
+      'more common in Latin America. The registry needs one. Which is the safer ' +
+      'neutral choice for a library read by both?',
+  },
+  {
+    language: 'es',
+    current: 'desdeSincrono',
+    alternatives: ['desdeSincronico'],
+    sites: [{ module: 'task', concept: 'fromSync' }],
+    question:
+      '`sincrono` is the technical form in Spain; `sincronico` is more usual in ' +
+      'Latin America. Same regional split as converge/convergir, and it should ' +
+      'probably be resolved the same way for consistency.',
+  },
+  {
+    language: 'es',
+    current: 'preguntar',
+    alternatives: ['pedir', 'obtenerEntorno'],
+    sites: [{ module: 'reader', concept: 'ask' }],
+    question:
+      "Reader's `ask` requests the environment rather than asking a question. " +
+      '`preguntar` is the literal translation and carries the interrogative ' +
+      'sense; `pedir` ("to request") may describe the operation more accurately. ' +
+      'Does `preguntar()` mislead a reader who does not know the English name?',
+  },
+  {
+    language: 'es',
+    current: 'enlazar',
+    alternatives: ['encadenarPlano', 'aplanarYMapear'],
+    sites: [
+      { module: 'option', concept: 'flatMap' },
+      { module: 'result', concept: 'flatMap' },
+      { module: 'task', concept: 'flatMap' },
+      { module: 'reader', concept: 'flatMap' },
+    ],
+    question:
+      '`enlazar` is a calque of the monadic "bind" and names the operation the ' +
+      'way Spanish-speaking FP writing tends to. But outside that context it ' +
+      'reads as "to hyperlink". Does the FP sense carry for a developer meeting ' +
+      'it cold, or does it need a more descriptive name?',
+  },
+  {
+    language: 'es',
+    current: 'fluir',
+    alternatives: ['flujo'],
+    sites: [{ module: 'pipe', concept: 'flow' }],
+    question:
+      '`fluir` is the intransitive verb "to flow"; `flow` here is a noun — the ' +
+      'composed pipeline. `flujo` is the noun. Every other name in this module ' +
+      'is a verb (`encadenar`), so the verb form is consistent but arguably ' +
+      'describes the wrong thing. Consistency or accuracy?',
+  },
+  {
+    language: 'es',
+    current: 'par',
+    alternatives: ['parOrdenado', 'dupla'],
+    sites: [{ module: 'birds', concept: 'pair' }],
+    question:
+      '`par` also means "even number", which is a live ambiguity in a numeric ' +
+      'library. `par ordenado` is the standard mathematical term but is long for ' +
+      'a combinator. Is the ambiguity real enough at a call site to pay for it?',
+  },
 ];
 
 /** A concept: one function, named once per language. */
@@ -166,8 +273,9 @@ export const vocabulary: Vocabulary = {
     ap: { en: 'ap', es: 'aplicativo' },
     filter: { en: 'filter', es: 'filtrar' },
     flatten: { en: 'flatten', es: 'aplanar' },
-    // `segun` ("depending on") fits the usage — case analysis — better than a
-    // literal translation of "match", which in Spanish suggests equality.
+    // `plegar` ("to fold") names the operation by what it does — collapse both
+    // branches to one value — rather than translating "match", which in Spanish
+    // suggests equality testing.
     match: { en: 'match', es: 'plegar' },
     getOrElse: { en: 'getOrElse', es: 'obtenerODefecto' },
     orElse: { en: 'orElse', es: 'oBien' },
