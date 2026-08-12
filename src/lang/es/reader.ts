@@ -4,13 +4,13 @@
 // @experimental This dialect is machine-generated and has NOT been reviewed by
 // a native speaker. English is the reference dialect.
 export {
-  ap as aplicar,
+  ap as aplicativo,
   ask as preguntar,
   asks as preguntarPor,
   flatMap as enlazar,
   flatten as aplanar,
-  local as enEntorno,
+  local as adaptarEntorno,
   map as mapear,
-  of as de,
+  of as deValor,
   run as ejecutar,
 } from '../../reader/index';

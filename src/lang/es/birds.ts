@@ -4,9 +4,9 @@
 // @experimental This dialect is machine-generated and has NOT been reviewed by
 // a native speaker. English is the reference dialect.
 export {
-  ap as aplicar,
-  apply as invocar,
-  applyTo as aplicarSobre,
+  ap as aplicativo,
+  apply as aplicar,
+  applyTo as pasarA,
   compose as componer,
   compose2 as componer2,
   compose3 as componer3,
@@ -15,7 +15,7 @@ export {
   duplicate as duplicar,
   flip as invertir,
   identity as identidad,
-  on as sobre,
+  on as sobreAmbos,
   pair as par,
   pipe2 as encadenar2,
 } from '../../birds/index';

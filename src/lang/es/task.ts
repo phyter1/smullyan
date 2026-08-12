@@ -4,13 +4,13 @@
 // @experimental This dialect is machine-generated and has NOT been reviewed by
 // a native speaker. English is the reference dialect.
 export {
-  all as todas,
-  ap as aplicar,
+  all as enParalelo,
+  ap as aplicativo,
   flatMap as enlazar,
   fromPromise as desdePromesa,
   fromSync as desdeSincrono,
   map as mapear,
-  of as de,
+  of as deValor,
   sequential as enSecuencia,
   tryCatch as intentar,
 } from '../../task/index';

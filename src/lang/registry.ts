@@ -51,11 +51,60 @@
 /** Languages this registry knows about. English is the reference. */
 export type Language = 'en' | 'es';
 
-/** Which dialects a fluent speaker has actually checked. */
+/**
+ * Which dialects a FLUENT SPEAKER has checked. Machine review does not count.
+ *
+ * Spanish has been through three independent adversarial LLM reviews — one for
+ * naturalness to a working developer, one for regional neutrality and
+ * grammatical form, one for semantic precision and false friends — and 29
+ * corrections were applied where they converged. That found real errors, but it
+ * is not the same thing as a native speaker, because the reviewers share the
+ * blind spots of whatever produced the vocabulary. So `es` stays null.
+ *
+ * A test asserts these values, so this cannot silently start claiming review
+ * that did not happen.
+ */
 export const reviewedBy: Readonly<Record<Language, string | null>> = {
   en: 'reference dialect',
   es: null,
 };
+
+/**
+ * Machine review, recorded separately so it is never mistaken for the real
+ * thing. Bump the date when a new pass runs.
+ */
+export const machineReviewed: Readonly<Record<Language, string | null>> = {
+  en: null,
+  es: '2026-08-12: three adversarial LLM passes, 29 corrections applied',
+};
+
+/**
+ * Judgement calls a native speaker should settle. Recorded rather than silently
+ * decided, because reviewers disagreed or the trade-off is genuinely regional.
+ *
+ * - `exito` / `acierto` for Ok — `exito` loses an accent and skews toward
+ *   "achievement"; `acierto`/`fallo` is a cleaner native antonym pair.
+ * - `desdeAnulable` — `anulable` means "voidable" in law, though Microsoft's
+ *   Spanish docs do use it for nullable.
+ * - `converger` / `convergir` — peninsular vs Latin American infinitive.
+ * - `desdeSincrono` — `sincrono` (Spain, technical) vs `sincronico` (LatAm).
+ * - `preguntar` for Reader's `ask` — arguably `pedir`, since it requests the
+ *   environment rather than asking a question.
+ * - `enlazar` for flatMap — a calque of "bind"; reads as "hyperlink" to some.
+ * - `fluir` for flow — `fluir` is intransitive; `flujo` may read better.
+ * - `par` for pair — also means "even number", though "par ordenado" is the
+ *   standard mathematical term.
+ */
+export const openQuestions: ReadonlyArray<string> = [
+  'exito vs acierto for Ok',
+  'desdeAnulable (anulable = voidable in law)',
+  'converger vs convergir (regional)',
+  'desdeSincrono vs desdeSincronico (regional)',
+  'preguntar vs pedir for Reader.ask',
+  'enlazar for flatMap (calque of bind)',
+  'fluir vs flujo for flow',
+  'par for pair (also "even number")',
+];
 
 /** A concept: one function, named once per language. */
 export type Entry = Readonly<Record<Language, string>>;
@@ -84,10 +133,10 @@ export const vocabulary: Vocabulary = {
     // `ap`, `apply` and `applyTo` are three distinct concepts in this library
     // and must stay distinguishable in every language, or translation becomes
     // ambiguous. Spanish separates them as aplicar / invocar / aplicarSobre.
-    ap: { en: 'ap', es: 'aplicar' },
-    apply: { en: 'apply', es: 'invocar' },
-    applyTo: { en: 'applyTo', es: 'aplicarSobre' },
-    on: { en: 'on', es: 'sobre' },
+    ap: { en: 'ap', es: 'aplicativo' },
+    apply: { en: 'apply', es: 'aplicar' },
+    applyTo: { en: 'applyTo', es: 'pasarA' },
+    on: { en: 'on', es: 'sobreAmbos' },
     converge: { en: 'converge', es: 'converger' },
     pair: { en: 'pair', es: 'par' },
     pipe2: { en: 'pipe2', es: 'encadenar2' },
@@ -114,16 +163,16 @@ export const vocabulary: Vocabulary = {
     // `enlazar` (to bind) rather than a literal "flat map" — it names the
     // monadic operation as Spanish speakers describe it.
     flatMap: { en: 'flatMap', es: 'enlazar' },
-    ap: { en: 'ap', es: 'aplicar' },
+    ap: { en: 'ap', es: 'aplicativo' },
     filter: { en: 'filter', es: 'filtrar' },
     flatten: { en: 'flatten', es: 'aplanar' },
     // `segun` ("depending on") fits the usage — case analysis — better than a
     // literal translation of "match", which in Spanish suggests equality.
-    match: { en: 'match', es: 'segun' },
-    getOrElse: { en: 'getOrElse', es: 'obtenerOSino' },
-    orElse: { en: 'orElse', es: 'oSino' },
+    match: { en: 'match', es: 'plegar' },
+    getOrElse: { en: 'getOrElse', es: 'obtenerODefecto' },
+    orElse: { en: 'orElse', es: 'oBien' },
     sequence: { en: 'sequence', es: 'secuenciar' },
-    traverse: { en: 'traverse', es: 'recorrer' },
+    traverse: { en: 'traverse', es: 'atravesar' },
   },
 
   result: {
@@ -136,36 +185,36 @@ export const vocabulary: Vocabulary = {
     map: { en: 'map', es: 'mapear' },
     mapErr: { en: 'mapErr', es: 'mapearFallo' },
     flatMap: { en: 'flatMap', es: 'enlazar' },
-    ap: { en: 'ap', es: 'aplicar' },
+    ap: { en: 'ap', es: 'aplicativo' },
     flatten: { en: 'flatten', es: 'aplanar' },
-    match: { en: 'match', es: 'segun' },
-    getOrElse: { en: 'getOrElse', es: 'obtenerOSino' },
-    orElse: { en: 'orElse', es: 'oSino' },
+    match: { en: 'match', es: 'plegar' },
+    getOrElse: { en: 'getOrElse', es: 'obtenerODefecto' },
+    orElse: { en: 'orElse', es: 'oBien' },
     sequence: { en: 'sequence', es: 'secuenciar' },
-    traverse: { en: 'traverse', es: 'recorrer' },
+    traverse: { en: 'traverse', es: 'atravesar' },
   },
 
   task: {
-    of: { en: 'of', es: 'de' },
+    of: { en: 'of', es: 'deValor' },
     fromPromise: { en: 'fromPromise', es: 'desdePromesa' },
     fromSync: { en: 'fromSync', es: 'desdeSincrono' },
     map: { en: 'map', es: 'mapear' },
     flatMap: { en: 'flatMap', es: 'enlazar' },
-    ap: { en: 'ap', es: 'aplicar' },
+    ap: { en: 'ap', es: 'aplicativo' },
     tryCatch: { en: 'tryCatch', es: 'intentar' },
-    all: { en: 'all', es: 'todas' },
+    all: { en: 'all', es: 'enParalelo' },
     sequential: { en: 'sequential', es: 'enSecuencia' },
   },
 
   reader: {
-    of: { en: 'of', es: 'de' },
+    of: { en: 'of', es: 'deValor' },
     ask: { en: 'ask', es: 'preguntar' },
     asks: { en: 'asks', es: 'preguntarPor' },
     map: { en: 'map', es: 'mapear' },
     flatMap: { en: 'flatMap', es: 'enlazar' },
-    ap: { en: 'ap', es: 'aplicar' },
+    ap: { en: 'ap', es: 'aplicativo' },
     flatten: { en: 'flatten', es: 'aplanar' },
-    local: { en: 'local', es: 'enEntorno' },
+    local: { en: 'local', es: 'adaptarEntorno' },
     run: { en: 'run', es: 'ejecutar' },
   },
 
@@ -173,30 +222,30 @@ export const vocabulary: Vocabulary = {
   // be read aloud, so translating them produces genuinely conversational code
   // rather than English structure wearing Spanish labels.
   agent: {
-    millis: { en: 'millis', es: 'milis' },
+    millis: { en: 'millis', es: 'milisegundos' },
     seconds: { en: 'seconds', es: 'segundos' },
     minutes: { en: 'minutes', es: 'minutos' },
-    inMillis: { en: 'inMillis', es: 'enMilis' },
+    inMillis: { en: 'inMillis', es: 'enMilisegundos' },
     upTo: { en: 'upTo', es: 'hasta' },
     onceOnly: { en: 'onceOnly', es: 'soloUnaVez' },
     everyTime: { en: 'everyTime', es: 'cadaVez' },
     immediately: { en: 'immediately', es: 'inmediatamente' },
-    exponentiallyFrom: { en: 'exponentiallyFrom', es: 'exponencialmenteDesde' },
+    exponentiallyFrom: { en: 'exponentiallyFrom', es: 'exponencialDesde' },
     cappedAt: { en: 'cappedAt', es: 'limitadoA' },
     whileFailing: { en: 'whileFailing', es: 'mientrasFalle' },
     whileTransient: { en: 'whileTransient', es: 'mientrasSeaTransitorio' },
-    backingOff: { en: 'backingOff', es: 'esperando' },
-    ignoringServerAdvice: { en: 'ignoringServerAdvice', es: 'ignorandoConsejoDelServidor' },
+    backingOff: { en: 'backingOff', es: 'espaciando' },
+    ignoringServerAdvice: { en: 'ignoringServerAdvice', es: 'ignorandoAlServidor' },
     within: { en: 'within', es: 'dentroDe' },
     withClock: { en: 'withClock', es: 'conReloj' },
-    callingApi: { en: 'callingApi', es: 'llamandoApi' },
+    callingApi: { en: 'callingApi', es: 'llamandoServicio' },
     fallingBackTo: { en: 'fallingBackTo', es: 'recurriendoA' },
     orDefaultingTo: { en: 'orDefaultingTo', es: 'oPorDefecto' },
-    theValue: { en: 'theValue', es: 'elValor' },
+    theValue: { en: 'theValue', es: 'siempre' },
     explain: { en: 'explain', es: 'explicar' },
     isRetryable: { en: 'isRetryable', es: 'esReintentable' },
-    rateLimited: { en: 'rateLimited', es: 'limitadoPorTasa' },
-    invalidArgs: { en: 'invalidArgs', es: 'argumentosInvalidos' },
+    rateLimited: { en: 'rateLimited', es: 'tasaExcedida' },
+    invalidArgs: { en: 'invalidArgs', es: 'argumentosNoValidos' },
     notFound: { en: 'notFound', es: 'noEncontrado' },
     timedOut: { en: 'timedOut', es: 'tiempoAgotado' },
     unavailable: { en: 'unavailable', es: 'noDisponible' },
