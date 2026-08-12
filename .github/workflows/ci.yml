@@ -36,13 +36,29 @@ jobs:
       # Corepack is deliberately NOT used: Node 25+ no longer bundles it and
       # Node 26 becomes Active LTS on 2026-10-28 without it.
       - name: Setup pnpm + Node
+        id: setup
+        # continue-on-error so a failed download does not end the job; the retry
+        # below reruns the action. GitHub Actions has no step-level retry and an
+        # action cannot be wrapped in a shell loop, so this is the only way to
+        # retry a `uses:` step.
+        continue-on-error: true
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
-          # Installed separately below so it can be retried. The action itself
-          # only downloads two binaries; the install makes hundreds of registry
-          # requests, and that is what actually flakes.
+          install: false
+
+      # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
+      # binary come from — returned ECONNRESET and 503 repeatedly during a
+      # period of platform instability, failing jobs before any project code
+      # ran. This retries the download once. If it fails again the job fails,
+      # so a genuinely broken setup is never mistaken for a passing build.
+      - name: Setup pnpm + Node (retry)
+        if: steps.setup.outcome == 'failure'
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
           install: false
 
       - name: Install
@@ -84,13 +100,29 @@ jobs:
           persist-credentials: false
 
       - name: Setup pnpm + Node
+        id: setup
+        # continue-on-error so a failed download does not end the job; the retry
+        # below reruns the action. GitHub Actions has no step-level retry and an
+        # action cannot be wrapped in a shell loop, so this is the only way to
+        # retry a `uses:` step.
+        continue-on-error: true
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
-          # Installed separately below so it can be retried. The action itself
-          # only downloads two binaries; the install makes hundreds of registry
-          # requests, and that is what actually flakes.
+          install: false
+
+      # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
+      # binary come from — returned ECONNRESET and 503 repeatedly during a
+      # period of platform instability, failing jobs before any project code
+      # ran. This retries the download once. If it fails again the job fails,
+      # so a genuinely broken setup is never mistaken for a passing build.
+      - name: Setup pnpm + Node (retry)
+        if: steps.setup.outcome == 'failure'
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
           install: false
 
       - name: Install
@@ -146,13 +178,29 @@ jobs:
           persist-credentials: false
 
       - name: Setup pnpm + Node
+        id: setup
+        # continue-on-error so a failed download does not end the job; the retry
+        # below reruns the action. GitHub Actions has no step-level retry and an
+        # action cannot be wrapped in a shell loop, so this is the only way to
+        # retry a `uses:` step.
+        continue-on-error: true
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
-          # Installed separately below so it can be retried. The action itself
-          # only downloads two binaries; the install makes hundreds of registry
-          # requests, and that is what actually flakes.
+          install: false
+
+      # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
+      # binary come from — returned ECONNRESET and 503 repeatedly during a
+      # period of platform instability, failing jobs before any project code
+      # ran. This retries the download once. If it fails again the job fails,
+      # so a genuinely broken setup is never mistaken for a passing build.
+      - name: Setup pnpm + Node (retry)
+        if: steps.setup.outcome == 'failure'
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
           install: false
 
       - name: Install
@@ -197,13 +245,29 @@ jobs:
           persist-credentials: false
 
       - name: Setup pnpm + Node
+        id: setup
+        # continue-on-error so a failed download does not end the job; the retry
+        # below reruns the action. GitHub Actions has no step-level retry and an
+        # action cannot be wrapped in a shell loop, so this is the only way to
+        # retry a `uses:` step.
+        continue-on-error: true
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
-          # Installed separately below so it can be retried. The action itself
-          # only downloads two binaries; the install makes hundreds of registry
-          # requests, and that is what actually flakes.
+          install: false
+
+      # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
+      # binary come from — returned ECONNRESET and 503 repeatedly during a
+      # period of platform instability, failing jobs before any project code
+      # ran. This retries the download once. If it fails again the job fails,
+      # so a genuinely broken setup is never mistaken for a passing build.
+      - name: Setup pnpm + Node (retry)
+        if: steps.setup.outcome == 'failure'
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
           install: false
 
       - name: Install
