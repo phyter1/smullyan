@@ -130,7 +130,77 @@
         "default": "./dist/pipe.cjs"
       }
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./es/birds": {
+      "import": {
+        "types": "./dist/es-birds.d.mts",
+        "default": "./dist/es-birds.mjs"
+      },
+      "require": {
+        "types": "./dist/es-birds.d.cts",
+        "default": "./dist/es-birds.cjs"
+      }
+    },
+    "./es/pipe": {
+      "import": {
+        "types": "./dist/es-pipe.d.mts",
+        "default": "./dist/es-pipe.mjs"
+      },
+      "require": {
+        "types": "./dist/es-pipe.d.cts",
+        "default": "./dist/es-pipe.cjs"
+      }
+    },
+    "./es/option": {
+      "import": {
+        "types": "./dist/es-option.d.mts",
+        "default": "./dist/es-option.mjs"
+      },
+      "require": {
+        "types": "./dist/es-option.d.cts",
+        "default": "./dist/es-option.cjs"
+      }
+    },
+    "./es/result": {
+      "import": {
+        "types": "./dist/es-result.d.mts",
+        "default": "./dist/es-result.mjs"
+      },
+      "require": {
+        "types": "./dist/es-result.d.cts",
+        "default": "./dist/es-result.cjs"
+      }
+    },
+    "./es/task": {
+      "import": {
+        "types": "./dist/es-task.d.mts",
+        "default": "./dist/es-task.mjs"
+      },
+      "require": {
+        "types": "./dist/es-task.d.cts",
+        "default": "./dist/es-task.cjs"
+      }
+    },
+    "./es/reader": {
+      "import": {
+        "types": "./dist/es-reader.d.mts",
+        "default": "./dist/es-reader.mjs"
+      },
+      "require": {
+        "types": "./dist/es-reader.d.cts",
+        "default": "./dist/es-reader.cjs"
+      }
+    },
+    "./es/agent": {
+      "import": {
+        "types": "./dist/es-agent.d.mts",
+        "default": "./dist/es-agent.mjs"
+      },
+      "require": {
+        "types": "./dist/es-agent.d.cts",
+        "default": "./dist/es-agent.cjs"
+      }
+    }
   },
   "files": [
     "dist",
@@ -159,7 +229,7 @@
     "check:publint": "publint --strict",
     "verify:package": "bash scripts/verify-package.sh",
     "check:package": "pnpm run build && pnpm run check:dts-emit && pnpm run verify:package",
-    "ci": "pnpm run check && pnpm run check:package && pnpm run docs:check",
+    "ci": "pnpm run check && pnpm run check:package && pnpm run docs:check && pnpm run dialects:check",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm run build && changeset publish",
@@ -175,7 +245,10 @@
     "docs:api": "node scripts/gen-api-reference.mjs",
     "docs:aviary": "node scripts/gen-aviary.mjs",
     "docs:gen": "pnpm run build && pnpm run docs:api && pnpm run docs:aviary",
-    "docs:check": "pnpm run docs:gen && git diff --exit-code --stat -- docs/reference/api.md docs/reference/aviary.md"
+    "docs:check": "pnpm run docs:gen && git diff --exit-code --stat -- docs/reference/api.md docs/reference/aviary.md",
+    "dialects": "pnpm run build && node scripts/gen-dialects.mjs",
+    "dialects:check": "pnpm run dialects && git diff --exit-code --stat -- src/lang",
+    "translate": "node scripts/translate.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

@@ -1,0 +1,197 @@
+import { test, fc } from '@fast-check/vitest';
+import { describe, it, expect } from 'vitest';
+
+import * as EsAgent from '../src/lang/es/agent';
+import * as Es from '../src/lang/es/option';
+import * as EsPipe from '../src/lang/es/pipe';
+import { languages, modules, reviewedBy, vocabulary } from '../src/lang/registry';
+import * as O from '../src/option/option';
+import { pipe } from '../src/pipe/pipe';
+
+// The codemod is a plain .mjs script so it can run without a build step. It is
+// imported here rather than reimplemented, so the tests exercise the real thing.
+const { translate, loadVocabulary, renameMap } = await import('../scripts/translate.mjs');
+
+describe('the registry is honest about what has been verified', () => {
+  it('records which dialects a native speaker has checked', () => {
+    // If this ever silently claims review that did not happen, the whole
+    // "experimental" caveat in the docs becomes a lie.
+    expect(reviewedBy.en).toBe('reference dialect');
+    expect(reviewedBy.es).toBeNull();
+  });
+});
+
+describe('the three mechanical properties', () => {
+  it('is TOTAL — every concept named in every language', () => {
+    const gaps: string[] = [];
+    for (const mod of modules) {
+      for (const [concept, names] of Object.entries(vocabulary[mod] ?? {})) {
+        for (const lang of languages) {
+          if (typeof names[lang] !== 'string' || names[lang].length === 0) {
+            gaps.push(`${mod}.${concept}:${lang}`);
+          }
+        }
+      }
+    }
+    expect(gaps).toEqual([]);
+  });
+
+  it('is INJECTIVE — no two concepts share a name within a module', () => {
+    const clashes: string[] = [];
+    for (const mod of modules) {
+      for (const lang of languages) {
+        const seen = new Map<string, string>();
+        for (const [concept, names] of Object.entries(vocabulary[mod] ?? {})) {
+          const name = names[lang];
+          const prior = seen.get(name);
+          if (prior !== undefined) clashes.push(`${mod}.${lang}: ${prior} & ${concept} -> ${name}`);
+          seen.set(name, concept);
+        }
+      }
+    }
+    // Ambiguity here would make translation lossy in one direction.
+    expect(clashes).toEqual([]);
+  });
+
+  it('every English name is a real export of its module', () => {
+    // Grounding is enforced against the BUILT package by gen-dialects.mjs; this
+    // asserts the option module specifically, as a fast in-suite sanity check.
+    for (const concept of Object.keys(vocabulary['option'] ?? {})) {
+      expect(Object.hasOwn(O, concept)).toBe(true);
+    }
+  });
+});
+
+describe('a dialect is the same functions, renamed', () => {
+  it('Spanish Option is English Option', () => {
+    expect(Es.algo).toBe(O.some);
+    expect(Es.nada).toBe(O.none);
+    expect(Es.mapear).toBe(O.map);
+    expect(Es.enlazar).toBe(O.flatMap);
+    expect(Es.obtenerOSino).toBe(O.getOrElse);
+  });
+
+  it('behaves identically, because it IS identical', () => {
+    const enResult = pipe(
+      O.some(20),
+      O.map((n: number) => n + 1),
+      O.getOrElse(() => 0),
+    );
+    const esResult = EsPipe.encadenar(
+      Es.algo(20),
+      Es.mapear((n: number) => n + 1),
+      Es.obtenerOSino(() => 0),
+    );
+    expect(esResult).toBe(enResult);
+    expect(esResult).toBe(21);
+  });
+
+  it('reads as Spanish in the agent dialect', () => {
+    // The place a dialect earns its keep: these names exist to be read aloud.
+    expect(EsAgent.segundos(10)).toEqual({ _tag: 'Duration', ms: 10_000 });
+    expect(EsAgent.hasta(4).attempts).toEqual({ _tag: 'Attempts', total: 4 });
+    expect(EsAgent.milis(250)).toEqual({ _tag: 'Duration', ms: 250 });
+  });
+});
+
+describe('the codemod translates only what it should', () => {
+  const sample = `import { some, map, filter, getOrElse } from 'smullyan/option';
+import { pipe } from 'smullyan/pipe';
+
+const isEven = (n: number): boolean => n % 2 === 0;
+const doubled = [1, 2, 3].map((n) => n * 2);
+const config = { map: 'not ours', filter: true };
+
+export const result = pipe(
+  some(20),
+  map((n: number) => n + 1),
+  filter(isEven),
+  getOrElse(() => 0),
+);
+`;
+
+  it('rewrites imported identifiers and module specifiers', () => {
+    const es = translate(sample, 'en', 'es');
+    expect(es).toContain("from 'smullyan/es/option'");
+    expect(es).toContain("from 'smullyan/es/pipe'");
+    expect(es).toContain('encadenar(');
+    expect(es).toContain('algo(20)');
+    expect(es).toContain('obtenerOSino(');
+  });
+
+  it('leaves an unrelated Array#map alone', () => {
+    // The dangerous case. A blanket rename would corrupt this.
+    const es = translate(sample, 'en', 'es');
+    expect(es).toContain('[1, 2, 3].map((n) => n * 2)');
+    expect(es).not.toContain('[1, 2, 3].mapear');
+  });
+
+  it('leaves object keys alone', () => {
+    const es = translate(sample, 'en', 'es');
+    expect(es).toContain("map: 'not ours'");
+    expect(es).toContain('filter: true');
+  });
+
+  it('leaves files that import nothing from smullyan untouched', () => {
+    const unrelated = `const map = (x: number) => x;\nexport const y = map(1);\n`;
+    expect(translate(unrelated, 'en', 'es')).toBe(unrelated);
+  });
+
+  it('preserves a local alias, translating only the imported name', () => {
+    const aliased = `import { map as transform } from 'smullyan/option';\nexport const f = transform;\n`;
+    const es = translate(aliased, 'en', 'es');
+    expect(es).toContain('mapear as transform');
+    expect(es).toContain('export const f = transform;');
+  });
+
+  it('moves namespace-import specifiers without touching the binding', () => {
+    const ns = `import * as O from 'smullyan/option';\nexport const x = O.some(1);\n`;
+    const es = translate(ns, 'en', 'es');
+    expect(es).toContain("import * as O from 'smullyan/es/option'");
+    expect(es).toContain('O.some(1)');
+  });
+});
+
+describe('reversibility is a law, not an assumption', () => {
+  const vocab = loadVocabulary();
+
+  test.prop([
+    fc.uniqueArray(fc.constantFrom(...Object.keys(vocabulary['option'] ?? {})), {
+      minLength: 1,
+      maxLength: 6,
+    }),
+  ])('translate(en → es → en) is the identity for any Option program', (concepts) => {
+    const source = `import { ${concepts.join(', ')} } from 'smullyan/option';\n${concepts
+      .map((c, i) => `export const use${String(i)} = ${c};`)
+      .join('\n')}\n`;
+    const there = translate(source, 'en', 'es');
+    const back = translate(there, 'es', 'en');
+    expect(back).toBe(source);
+  });
+
+  test.prop([
+    fc.uniqueArray(fc.constantFrom(...Object.keys(vocabulary['agent'] ?? {})), {
+      minLength: 1,
+      maxLength: 6,
+    }),
+  ])('translate(en → es → en) is the identity for any agent program', (concepts) => {
+    const source = `import { ${concepts.join(', ')} } from 'smullyan/agent';\n${concepts
+      .map((c, i) => `export const use${String(i)} = ${c};`)
+      .join('\n')}\n`;
+    expect(translate(translate(source, 'en', 'es'), 'es', 'en')).toBe(source);
+  });
+
+  it('the rename maps are exact inverses', () => {
+    for (const from of languages) {
+      for (const to of languages) {
+        const there = renameMap(vocab, from, to);
+        const back = renameMap(vocab, to, from);
+        for (const [a, b] of there) {
+          // Injectivity is what makes this hold; without it a name would map
+          // back to a different concept than it came from.
+          expect(back.get(b)).toBe(a);
+        }
+      }
+    }
+  });
+});
