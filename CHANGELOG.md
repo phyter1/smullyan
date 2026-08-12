@@ -1,5 +1,22 @@
 # smullyan
 
+## 0.4.0
+### Minor Changes
+
+
+
+- [#18](https://github.com/phyter1/smullyan/pull/18) [`8c1680f`](https://github.com/phyter1/smullyan/commit/8c1680f030d0dae66f9cca344439e466f134ea2e) Thanks [@phyter1](https://github.com/phyter1)! - **Breaking (experimental dialect):** 29 Spanish identifiers renamed following
+  adversarial review. Notably `obtenerOSino`/`oSino` → `obtenerODefecto`/`oBien`
+  (`sino` means "but rather"; "otherwise" is `si no`), `todas` → `enParalelo`
+  (the old name hid that the calls are concurrent), `segun` → `plegar`, and the
+  `ap`/`apply` mapping, which was inverted.
+  
+  Also adds a global bijectivity gate: two different concepts sharing one foreign
+  name now fails the build, because the codemod's rename map is global and would
+  otherwise translate back to the wrong concept.
+  
+  Spanish remains `@experimental` and unreviewed by a native speaker.
+
 ## 0.3.0
 ### Minor Changes
 
