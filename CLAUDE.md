@@ -26,7 +26,7 @@ The local directory is `~/code/fnctnl`; the package and repo are both
 | Dialects    | `smullyan/es/*` — Spanish, experimental                        |
 | Docs        | VitePress site, generated API reference, deployed to Pages     |
 | Release     | Fully automatic: signed commits, OIDC publish, SLSA provenance |
-| Tests       | 275, 100% coverage, no ignores anywhere                        |
+| Tests       | 281, 100% coverage, no ignores anywhere                        |
 
 ### Open items
 
@@ -35,7 +35,10 @@ The local directory is `~/code/fnctnl`; the package and repo are both
    `machineReviewed` — deliberately NOT the same field, because machine review
    is not native review. `openQuestions` in `src/lang/registry.ts` lists eight
    judgement calls left undecided (`exito` vs `acierto`, `converger` vs
-   `convergir`, `preguntar` vs `pedir` for Reader's `ask`, and others).
+   `convergir`, `preguntar` vs `pedir` for Reader's `ask`, and others). Each is
+   structured data pinned to the sites it concerns, so answering one means
+   editing the vocabulary and deleting the question together — do only one and
+   the build goes red.
 2. **More languages are a data change, not engineering.** Add a key to every
    entry in `src/lang/registry.ts`; the gates catch anything missed.
 3. **Five subpaths were placeholders once** — all now implemented. If you add a
@@ -49,8 +52,18 @@ The local directory is `~/code/fnctnl`; the package and repo are both
 ```sh
 pnpm install        # installs deps, wires git hooks (skipped when CI is set)
 pnpm check          # format, lint, typecheck, tests + coverage gate
-pnpm ci             # the above + build, package verification, docs, dialects
+pnpm run ci         # the above + build, package verification, docs, dialects
 ```
+
+**`pnpm run ci`, never `pnpm ci`.** `ci` is a _builtin_ pnpm command — an alias
+of `clean-install` — so it shadows the script entirely: it deletes
+`node_modules`, reinstalls from the lockfile, runs **no checks at all**, and
+exits 0. The pre-push gate that looks like it passed did nothing. `pnpm check`
+has no such collision, but prefer `pnpm run` for both.
+
+`dialects:check` is `git diff --exit-code -- src/lang`, so it reports failure
+against a dirty tree. Committing first is the difference between a real drift
+and your own uncommitted edit.
 
 `gitleaks` and `convco` must be on PATH — `brew install gitleaks convco`.
 
@@ -210,6 +223,7 @@ Repeatedly, a gate reported success for work it never performed:
 | "gitleaks found a probable secret" | gitleaks was not installed                 |
 | attw + publint clean               | an internal namespace was leaking publicly |
 | 4 green retry jobs                 | a CDN was failing and two jobs got lucky   |
+| `pnpm ci` exited 0                 | it reinstalled deps and ran no checks      |
 
 None were wrong _answers_. They were **absent** answers wearing a green badge.
 
