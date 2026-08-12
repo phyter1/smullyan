@@ -46,8 +46,31 @@ jobs:
         run: |
           set -euo pipefail
           TARBALL="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl -fsSL --retry 3 -o "$TARBALL" \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${TARBALL}"
+          URL="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${TARBALL}"
+
+          # GitHub's release CDN returned 503 through curl's own retries during
+          # a period of platform instability. curl's --retry backs off within a
+          # single invocation; this adds an outer loop with a longer wait, so a
+          # CDN blip cannot take down the secret scan.
+          #
+          # The scan must fail CLOSED: if the binary genuinely cannot be
+          # fetched, this exits non-zero rather than skipping the scan. A secret
+          # scan that silently does not run is worse than one that fails loudly.
+          for attempt in 1 2 3; do
+            if curl -fsSL --retry 5 --retry-delay 3 --retry-all-errors \
+                 --connect-timeout 20 --max-time 180 -o "$TARBALL" "$URL"; then
+              break
+            fi
+            echo "::warning::gitleaks download attempt $attempt failed; retrying" >&2
+            rm -f "$TARBALL"
+            sleep $((attempt * 10))
+          done
+
+          if [ ! -s "$TARBALL" ]; then
+            echo "::error::could not download gitleaks after 3 attempts — failing closed" >&2
+            exit 1
+          fi
+
           echo "${GITLEAKS_SHA256}  ${TARBALL}" | sha256sum --check --status
           tar -xzf "$TARBALL" gitleaks
           sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
