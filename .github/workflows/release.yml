@@ -44,7 +44,7 @@ jobs:
         with:
           fetch-depth: 0 # changesets needs full history to diff against baseBranch
 
-      - name: Setup pnpm + Node and install
+      - name: Setup pnpm + Node
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24 # ships npm 11.17.x (>= 11.5.1 required for OIDC)
@@ -92,11 +92,45 @@ jobs:
       # setup-node write `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`
       # into .npmrc; with no NODE_AUTH_TOKEN set, the literal placeholder is sent
       # as a bearer token and the publish fails with a confusing 404.
-      - name: Setup pnpm + Node and install
+      - name: Setup pnpm + Node
+        id: setup
+        # continue-on-error so a failed download does not end the job; the retry
+        # below reruns the action. GitHub Actions has no step-level retry and an
+        # action cannot be wrapped in a shell loop, so this is the only way to
+        # retry a `uses:` step.
+        continue-on-error: true
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
+          install: false
+
+      # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
+      # binary come from — returned ECONNRESET and 503 repeatedly during a
+      # period of platform instability, failing jobs before any project code
+      # ran. This retries the download once. If it fails again the job fails,
+      # so a genuinely broken setup is never mistaken for a passing build.
+      - name: Setup pnpm + Node (retry)
+        if: steps.setup.outcome == 'failure'
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install
+        # A transient ECONNRESET from the registry failed this PR's Quality job
+        # twice while every other job passed. GitHub Actions has no step-level
+        # retry, so this does it explicitly. --frozen-lockfile is preserved, so
+        # a retry can never mask a genuinely out-of-date lockfile.
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm install --frozen-lockfile; then exit 0; fi
+            echo "::warning::pnpm install attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::pnpm install failed after 3 attempts" >&2
+          exit 1
 
       # Gate the release on the full quality bar: format, lint, types, tests,
       # 100% coverage, declaration emit, and published-package verification.

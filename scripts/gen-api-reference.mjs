@@ -41,6 +41,7 @@ const OUT = join(ROOT, 'docs/reference/api.md');
 /** Every subpath entry point, and the dist file its exports are read from. */
 const ENTRIES = [
   { name: 'smullyan/birds', stem: 'birds', srcDir: 'src/birds' },
+  { name: 'smullyan/agent', stem: 'agent', srcDir: 'src/agent' },
   { name: 'smullyan/pipe', stem: 'pipe', srcDir: 'src/pipe' },
   { name: 'smullyan/option', stem: 'option', srcDir: 'src/option' },
   { name: 'smullyan/result', stem: 'result', srcDir: 'src/result' },
@@ -216,6 +217,18 @@ if (missing.length > 0) {
 
 // Backslash FIRST: escaping `|` introduces backslashes, so doing it the other
 // way round would double-escape them and mangle any literal `\` in the text.
+/**
+ * VitePress compiles markdown as a Vue template, so a bare `<A>` in TSDoc prose
+ * parses as an unclosed HTML tag and fails the build. Escape `<` in prose only —
+ * fenced blocks and inline code are left alone, because markdown-it already
+ * escapes their contents and double-escaping would render literal `&lt;`.
+ */
+const escapeProse = (md) =>
+  md
+    .split(/(```[\s\S]*?```|`[^`\n]*`)/g)
+    .map((part) => (part.startsWith('`') ? part : part.replaceAll('<', '&lt;')))
+    .join('');
+
 const esc = (s) => s.replaceAll('\\', '\\\\').replaceAll('|', '\\|').replaceAll('\n', ' ');
 
 let md = `---
@@ -250,7 +263,7 @@ for (const { entry, rows } of sections) {
   for (const r of rows) {
     md += `### ${r.name}\n\n`;
     md += `\`\`\`ts\n${r.signature}\n\`\`\`\n\n`;
-    md += `${r.doc}\n\n`;
+    md += `${escapeProse(r.doc)}\n\n`;
     md += `<sup>Source: [\`${r.file}\`](https://github.com/phyter1/smullyan/blob/main/${r.file})</sup>\n\n`;
   }
 }

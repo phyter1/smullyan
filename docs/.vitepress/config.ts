@@ -56,6 +56,7 @@ export default defineConfig({
           { text: 'Currying and composition', link: '/guide/currying' },
           { text: 'Working with Option and Result', link: '/guide/option-result' },
           { text: 'Task and Reader', link: '/guide/task-reader' },
+          { text: 'Tool calls for agents', link: '/guide/agent' },
         ],
       },
       {

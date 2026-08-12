@@ -60,6 +60,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./agent": {
+      "import": {
+        "types": "./dist/agent.d.mts",
+        "default": "./dist/agent.mjs"
+      },
+      "require": {
+        "types": "./dist/agent.d.cts",
+        "default": "./dist/agent.cjs"
+      }
+    },
     "./birds": {
       "import": {
         "types": "./dist/birds.d.mts",
