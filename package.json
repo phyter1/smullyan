@@ -1,6 +1,6 @@
 {
   "name": "smullyan",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A fully typesafe functional programming library for TypeScript: combinatory-logic bird combinators plus Option, Result, Task, Reader, pipe and flow.",
   "keywords": [
     "functional-programming",
