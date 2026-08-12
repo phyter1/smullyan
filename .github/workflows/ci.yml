@@ -49,12 +49,36 @@ jobs:
           install: false
 
       # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
-      # binary come from — returned ECONNRESET and 503 repeatedly during a
-      # period of platform instability, failing jobs before any project code
-      # ran. This retries the download once. If it fails again the job fails,
-      # so a genuinely broken setup is never mistaken for a passing build.
-      - name: Setup pnpm + Node (retry)
+      # binary come from — has been returning ECONNRESET and 503 intermittently,
+      # failing jobs before any project code runs. Two attempts were not enough:
+      # separate jobs lost both on two occasions.
+      #
+      # Three attempts with backoff between them. Retrying an overloaded CDN
+      # immediately is close to useless, so the waits matter more than the extra
+      # attempt does.
+      - name: Wait before retrying setup
         if: steps.setup.outcome == 'failure'
+        run: sleep 15
+
+      - name: Setup pnpm + Node (retry 1)
+        id: setup2
+        if: steps.setup.outcome == 'failure'
+        continue-on-error: true
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Wait before final setup attempt
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
+        run: sleep 30
+
+      # No continue-on-error. If this fails the job fails, so a genuinely broken
+      # setup can never be mistaken for a passing build. A retry that cannot
+      # still fail is suppression with extra steps.
+      - name: Setup pnpm + Node (retry 2)
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
@@ -113,12 +137,36 @@ jobs:
           install: false
 
       # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
-      # binary come from — returned ECONNRESET and 503 repeatedly during a
-      # period of platform instability, failing jobs before any project code
-      # ran. This retries the download once. If it fails again the job fails,
-      # so a genuinely broken setup is never mistaken for a passing build.
-      - name: Setup pnpm + Node (retry)
+      # binary come from — has been returning ECONNRESET and 503 intermittently,
+      # failing jobs before any project code runs. Two attempts were not enough:
+      # separate jobs lost both on two occasions.
+      #
+      # Three attempts with backoff between them. Retrying an overloaded CDN
+      # immediately is close to useless, so the waits matter more than the extra
+      # attempt does.
+      - name: Wait before retrying setup
         if: steps.setup.outcome == 'failure'
+        run: sleep 15
+
+      - name: Setup pnpm + Node (retry 1)
+        id: setup2
+        if: steps.setup.outcome == 'failure'
+        continue-on-error: true
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Wait before final setup attempt
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
+        run: sleep 30
+
+      # No continue-on-error. If this fails the job fails, so a genuinely broken
+      # setup can never be mistaken for a passing build. A retry that cannot
+      # still fail is suppression with extra steps.
+      - name: Setup pnpm + Node (retry 2)
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
@@ -191,12 +239,36 @@ jobs:
           install: false
 
       # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
-      # binary come from — returned ECONNRESET and 503 repeatedly during a
-      # period of platform instability, failing jobs before any project code
-      # ran. This retries the download once. If it fails again the job fails,
-      # so a genuinely broken setup is never mistaken for a passing build.
-      - name: Setup pnpm + Node (retry)
+      # binary come from — has been returning ECONNRESET and 503 intermittently,
+      # failing jobs before any project code runs. Two attempts were not enough:
+      # separate jobs lost both on two occasions.
+      #
+      # Three attempts with backoff between them. Retrying an overloaded CDN
+      # immediately is close to useless, so the waits matter more than the extra
+      # attempt does.
+      - name: Wait before retrying setup
         if: steps.setup.outcome == 'failure'
+        run: sleep 15
+
+      - name: Setup pnpm + Node (retry 1)
+        id: setup2
+        if: steps.setup.outcome == 'failure'
+        continue-on-error: true
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Wait before final setup attempt
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
+        run: sleep 30
+
+      # No continue-on-error. If this fails the job fails, so a genuinely broken
+      # setup can never be mistaken for a passing build. A retry that cannot
+      # still fail is suppression with extra steps.
+      - name: Setup pnpm + Node (retry 2)
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
@@ -258,12 +330,36 @@ jobs:
           install: false
 
       # GitHub's release CDN — where BOTH the pnpm binary and the gitleaks
-      # binary come from — returned ECONNRESET and 503 repeatedly during a
-      # period of platform instability, failing jobs before any project code
-      # ran. This retries the download once. If it fails again the job fails,
-      # so a genuinely broken setup is never mistaken for a passing build.
-      - name: Setup pnpm + Node (retry)
+      # binary come from — has been returning ECONNRESET and 503 intermittently,
+      # failing jobs before any project code runs. Two attempts were not enough:
+      # separate jobs lost both on two occasions.
+      #
+      # Three attempts with backoff between them. Retrying an overloaded CDN
+      # immediately is close to useless, so the waits matter more than the extra
+      # attempt does.
+      - name: Wait before retrying setup
         if: steps.setup.outcome == 'failure'
+        run: sleep 15
+
+      - name: Setup pnpm + Node (retry 1)
+        id: setup2
+        if: steps.setup.outcome == 'failure'
+        continue-on-error: true
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Wait before final setup attempt
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
+        run: sleep 30
+
+      # No continue-on-error. If this fails the job fails, so a genuinely broken
+      # setup can never be mistaken for a passing build. A retry that cannot
+      # still fail is suppression with extra steps.
+      - name: Setup pnpm + Node (retry 2)
+        if: steps.setup.outcome == 'failure' && steps.setup2.outcome == 'failure'
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24

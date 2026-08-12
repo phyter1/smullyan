@@ -43,6 +43,7 @@ echo "==> attw (node16 + bundler resolution, all seven entry points)"
 pnpm exec attw "$TARBALL" \
   --profile node16 \
   --format table-flipped \
-  --entrypoints . ./birds ./agent ./option ./result ./task ./reader ./pipe
+  --entrypoints . ./birds ./agent ./option ./result ./task ./reader ./pipe \
+  ./es/birds ./es/agent ./es/option ./es/result ./es/task ./es/reader ./es/pipe
 
 echo "==> package verification passed"
