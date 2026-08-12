@@ -33,6 +33,11 @@ jobs:
     name: Version
     if: github.repository == 'phyter1/smullyan'
     runs-on: ubuntu-latest
+    # Scopes RELEASE_SIGNING_KEY to this job alone. An environment secret is
+    # unavailable to any job that does not declare the environment, so no other
+    # workflow in the repo can read the key. No protection rules are attached,
+    # so this does not gate ordinary merges.
+    environment: release-signing
     permissions:
       contents: write # push the version branch
       pull-requests: write # open and update the "Version Packages" PR
@@ -49,6 +54,37 @@ jobs:
         with:
           runtime: node@24 # ships npm 11.17.x (>= 11.5.1 required for OIDC)
           cache: true
+
+      # changesets builds the version commit with `git commit`, and commits
+      # pushed that way are never GitHub-signed — only API/web-UI commits get
+      # the web-flow signature. `main` requires signed commits, so without this
+      # every release PR had to be merged with --admin.
+      #
+      # The commit is authored as the account's noreply address because GitHub
+      # verifies an SSH signature against signing keys on the account whose
+      # EMAIL authored the commit. Authoring as github-actions[bot] would fail
+      # verification, since no signing key can be added to that bot account.
+      #
+      # The consequence is worth stating plainly: this job can produce commits
+      # attributable to the account. That is why the key is dedicated, scoped to
+      # this environment, and revocable on its own.
+      - name: Configure signed commits
+        env:
+          SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "${SIGNING_KEY}" ]; then
+            echo "::error::RELEASE_SIGNING_KEY is not set on the release-signing environment." >&2
+            echo "::error::Without it the version commit is unsigned and cannot be merged." >&2
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${SIGNING_KEY}" > ~/.ssh/release_signing_key
+          chmod 600 ~/.ssh/release_signing_key
+          git config --global gpg.format ssh
+          git config --global user.signingkey ~/.ssh/release_signing_key
+          git config --global commit.gpgsign true
+          git config --global user.name 'phyter1'
+          git config --global user.email '81502122+phyter1@users.noreply.github.com'
 
       - name: Create or update the version PR
         id: changesets

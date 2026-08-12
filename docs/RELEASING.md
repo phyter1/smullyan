@@ -84,7 +84,62 @@ the code is safe.
 
 ---
 
-## The version PR needs an admin merge
+## Signed release commits
+
+`changesets/action` builds the version commit with `git commit`, and commits
+pushed that way are **never GitHub-signed** — the web-flow signature is only
+applied to commits created through the API or web UI. Since `main` requires
+signed commits, every release PR previously had to be merged with `--admin`.
+
+The `version` job now signs its commit with a dedicated SSH key.
+
+### How it is scoped
+
+|            |                                                                           |
+| ---------- | ------------------------------------------------------------------------- |
+| Key        | Dedicated ed25519, used only for release commits                          |
+| Storage    | **Environment** secret `RELEASE_SIGNING_KEY` on `release-signing`         |
+| Reach      | Only jobs declaring that environment — i.e. `release.yml`'s `version` job |
+| Revocation | Independent of your personal signing key                                  |
+
+An environment secret is invisible to any job that does not declare the
+environment, so no other workflow in the repo can read it. `release-signing`
+has no protection rules, so it does not gate ordinary merges.
+
+### The trade-off, stated plainly
+
+**This job can produce commits attributable to the account.** The commit is
+authored as `81502122+phyter1@users.noreply.github.com` because GitHub verifies
+an SSH signature against signing keys on the account whose _email authored the
+commit_ — authoring as `github-actions[bot]` would fail verification, since no
+signing key can be added to that bot account.
+
+Anyone who can land a workflow file in this repo could, in principle, read an
+environment secret by declaring that environment. On a public repo that accepts
+outside pull requests, secrets are **not** exposed to forked-PR runs, so the
+practical risk is limited to collaborators with write access.
+
+If that trade is ever unwanted, the alternatives are: drop
+`required_signatures` on `main` (loses a real guarantee about every human
+commit), or go back to merging the version PR with `--admin`.
+
+### Rotating the key
+
+```sh
+ssh-keygen -t ed25519 -N "" -C "smullyan-ci-release-signing" -f /tmp/k
+gh secret set RELEASE_SIGNING_KEY --env release-signing < /tmp/k
+gh ssh-key add /tmp/k.pub --type signing --title "smullyan-ci-release-signing"
+rm -f /tmp/k /tmp/k.pub
+```
+
+Then delete the old signing key from <https://github.com/settings/keys>.
+
+### If the key is missing
+
+The job fails immediately with an explicit error rather than producing an
+unsigned commit that silently cannot be merged.
+
+## Historical: why the version PR used to need an admin merge
 
 `changesets/action` builds the "Version Packages" commit by running `git commit`
 on the runner. Commits pushed that way are **never signed** — GitHub's web-flow
