@@ -1,5 +1,43 @@
 # smullyan
 
+## 0.3.0
+### Minor Changes
+
+
+
+- [#15](https://github.com/phyter1/smullyan/pull/15) [`0f7854a`](https://github.com/phyter1/smullyan/commit/0f7854a9a19bd1f97fc98e180eae8bb2697c3242) Thanks [@phyter1](https://github.com/phyter1)! - Add `smullyan/agent` — typed, serializable tool calls for agentic systems.
+  
+  A closed `ToolError` vocabulary whose fields are chosen so that both a program
+  and a language model can act on them: `RateLimited` carries how long to wait,
+  `InvalidArgs` carries which argument was wrong, `NotFound` carries near-misses.
+  `explain` renders any of them as a sentence written for a model to read, and
+  `parse` validates one back from the wire rather than casting.
+  
+  Retry, timeout and fallback compose over `Tool<A>` — a thunked `Result` — with
+  the clock injected rather than reached for, so backoff schedules are pure data
+  and exactly testable with a fake clock.
+  
+  Two dialects, one implementation. The readable one wraps every scalar in a
+  role or unit — `seconds(10)`, `upTo(4).attempts`, `whileTransient` — so a call
+  site states its own meaning without a signature lookup.
+
+
+- [#17](https://github.com/phyter1/smullyan/pull/17) [`a476e13`](https://github.com/phyter1/smullyan/commit/a476e13421eeccb559584f931106cf4c58e7fcfb) Thanks [@phyter1](https://github.com/phyter1)! - Add translatable dialects. `smullyan/es/*` exposes the whole library under
+  Spanish names, generated from a single registry, and `pnpm translate` rewrites
+  source files between dialects mechanically.
+  
+  This is possible because the library has no free-form surface — no method
+  chains, no string DSL, no config keys — so a program is a closed vocabulary
+  composed positionally, and only the identifiers carry language.
+  
+  Three properties are enforced at build time: the mapping is **total** (every
+  concept named in every language), **injective** (no two concepts share a name
+  within a module), and **reversible** (`translate(a → b → a)` is the identity,
+  asserted as a property test).
+  
+  @experimental Non-English dialects are machine-generated and have not been
+  reviewed by a native speaker. English remains the reference dialect.
+
 ## 0.2.0
 ### Minor Changes
 
