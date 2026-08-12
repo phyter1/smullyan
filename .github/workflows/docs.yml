@@ -32,11 +32,29 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup pnpm + Node and install
+      - name: Setup pnpm + Node
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
+          # Installed separately below so it can be retried. The action itself
+          # only downloads two binaries; the install makes hundreds of registry
+          # requests, and that is what actually flakes.
+          install: false
+
+      - name: Install
+        # A transient ECONNRESET from the registry failed this PR's Quality job
+        # twice while every other job passed. GitHub Actions has no step-level
+        # retry, so this does it explicitly. --frozen-lockfile is preserved, so
+        # a retry can never mask a genuinely out-of-date lockfile.
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm install --frozen-lockfile; then exit 0; fi
+            echo "::warning::pnpm install attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::pnpm install failed after 3 attempts" >&2
+          exit 1
 
       # docs:build regenerates the API reference and aviary from source first,
       # so a stale generated file cannot be published. VitePress is configured

@@ -35,11 +35,29 @@ jobs:
       # from package.json. No actions/setup-node, no corepack.
       # Corepack is deliberately NOT used: Node 25+ no longer bundles it and
       # Node 26 becomes Active LTS on 2026-10-28 without it.
-      - name: Setup pnpm + Node and install
+      - name: Setup pnpm + Node
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
+          # Installed separately below so it can be retried. The action itself
+          # only downloads two binaries; the install makes hundreds of registry
+          # requests, and that is what actually flakes.
+          install: false
+
+      - name: Install
+        # A transient ECONNRESET from the registry failed this PR's Quality job
+        # twice while every other job passed. GitHub Actions has no step-level
+        # retry, so this does it explicitly. --frozen-lockfile is preserved, so
+        # a retry can never mask a genuinely out-of-date lockfile.
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm install --frozen-lockfile; then exit 0; fi
+            echo "::warning::pnpm install attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::pnpm install failed after 3 attempts" >&2
+          exit 1
 
       - name: Check formatting (oxfmt)
         run: pnpm run format:check
@@ -65,11 +83,29 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup pnpm + Node and install
+      - name: Setup pnpm + Node
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
+          # Installed separately below so it can be retried. The action itself
+          # only downloads two binaries; the install makes hundreds of registry
+          # requests, and that is what actually flakes.
+          install: false
+
+      - name: Install
+        # A transient ECONNRESET from the registry failed this PR's Quality job
+        # twice while every other job passed. GitHub Actions has no step-level
+        # retry, so this does it explicitly. --frozen-lockfile is preserved, so
+        # a retry can never mask a genuinely out-of-date lockfile.
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm install --frozen-lockfile; then exit 0; fi
+            echo "::warning::pnpm install attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::pnpm install failed after 3 attempts" >&2
+          exit 1
 
       # Thresholds live in vitest.config.ts (100/100/100/100). Vitest exits
       # non-zero when any threshold is unmet, so this step IS the gate.
@@ -109,11 +145,29 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup pnpm + Node and install
+      - name: Setup pnpm + Node
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
+          # Installed separately below so it can be retried. The action itself
+          # only downloads two binaries; the install makes hundreds of registry
+          # requests, and that is what actually flakes.
+          install: false
+
+      - name: Install
+        # A transient ECONNRESET from the registry failed this PR's Quality job
+        # twice while every other job passed. GitHub Actions has no step-level
+        # retry, so this does it explicitly. --frozen-lockfile is preserved, so
+        # a retry can never mask a genuinely out-of-date lockfile.
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm install --frozen-lockfile; then exit 0; fi
+            echo "::warning::pnpm install attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::pnpm install failed after 3 attempts" >&2
+          exit 1
 
       # Overrides the locked typescript. Mutates pnpm-lock.yaml in the runner
       # workspace only; nothing is committed.
@@ -142,11 +196,29 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup pnpm + Node and install
+      - name: Setup pnpm + Node
         uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
           runtime: node@24
           cache: true
+          # Installed separately below so it can be retried. The action itself
+          # only downloads two binaries; the install makes hundreds of registry
+          # requests, and that is what actually flakes.
+          install: false
+
+      - name: Install
+        # A transient ECONNRESET from the registry failed this PR's Quality job
+        # twice while every other job passed. GitHub Actions has no step-level
+        # retry, so this does it explicitly. --frozen-lockfile is preserved, so
+        # a retry can never mask a genuinely out-of-date lockfile.
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm install --frozen-lockfile; then exit 0; fi
+            echo "::warning::pnpm install attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::pnpm install failed after 3 attempts" >&2
+          exit 1
 
       # THE LOAD-BEARING STEP. tsdown drives rolldown-plugin-dts, which spawns
       # tsgo under --noCheck and resolves on 'close' WITHOUT reading the exit
