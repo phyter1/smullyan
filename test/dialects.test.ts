@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import * as EsAgent from '../src/lang/es/agent';
 import * as Es from '../src/lang/es/option';
 import * as EsPipe from '../src/lang/es/pipe';
-import { languages, modules, reviewedBy, vocabulary } from '../src/lang/registry';
+import { languages, machineReviewed, modules, reviewedBy, vocabulary } from '../src/lang/registry';
 import * as O from '../src/option/option';
 import { pipe } from '../src/pipe/pipe';
 
@@ -17,6 +17,15 @@ describe('the registry is honest about what has been verified', () => {
     // If this ever silently claims review that did not happen, the whole
     // "experimental" caveat in the docs becomes a lie.
     expect(reviewedBy.en).toBe('reference dialect');
+    expect(reviewedBy.es).toBeNull();
+  });
+
+  it('does not let machine review masquerade as human review', () => {
+    // Spanish has had three adversarial LLM passes. That found real errors and
+    // is worth recording — but the reviewers share the blind spots of whatever
+    // produced the vocabulary, so it is NOT native review and must not be
+    // recorded as such.
+    expect(machineReviewed.es).toContain('adversarial');
     expect(reviewedBy.es).toBeNull();
   });
 });
@@ -68,7 +77,7 @@ describe('a dialect is the same functions, renamed', () => {
     expect(Es.nada).toBe(O.none);
     expect(Es.mapear).toBe(O.map);
     expect(Es.enlazar).toBe(O.flatMap);
-    expect(Es.obtenerOSino).toBe(O.getOrElse);
+    expect(Es.obtenerODefecto).toBe(O.getOrElse);
   });
 
   it('behaves identically, because it IS identical', () => {
@@ -80,7 +89,7 @@ describe('a dialect is the same functions, renamed', () => {
     const esResult = EsPipe.encadenar(
       Es.algo(20),
       Es.mapear((n: number) => n + 1),
-      Es.obtenerOSino(() => 0),
+      Es.obtenerODefecto(() => 0),
     );
     expect(esResult).toBe(enResult);
     expect(esResult).toBe(21);
@@ -89,8 +98,8 @@ describe('a dialect is the same functions, renamed', () => {
   it('reads as Spanish in the agent dialect', () => {
     // The place a dialect earns its keep: these names exist to be read aloud.
     expect(EsAgent.segundos(10)).toEqual({ _tag: 'Duration', ms: 10_000 });
+    expect(EsAgent.milisegundos(250)).toEqual({ _tag: 'Duration', ms: 250 });
     expect(EsAgent.hasta(4).attempts).toEqual({ _tag: 'Attempts', total: 4 });
-    expect(EsAgent.milis(250)).toEqual({ _tag: 'Duration', ms: 250 });
   });
 });
 
@@ -116,7 +125,7 @@ export const result = pipe(
     expect(es).toContain("from 'smullyan/es/pipe'");
     expect(es).toContain('encadenar(');
     expect(es).toContain('algo(20)');
-    expect(es).toContain('obtenerOSino(');
+    expect(es).toContain('obtenerODefecto(');
   });
 
   it('leaves an unrelated Array#map alone', () => {

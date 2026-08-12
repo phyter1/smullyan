@@ -126,7 +126,38 @@ for (const [mod, concepts] of Object.entries(vocabulary)) {
   }
 }
 
-// --- GATE 3: grounded in the built package ----------------------------------
+// --- GATE 3: globally bijective --------------------------------------------
+// Per-module injectivity is not enough. The codemod's rename map is global, so
+// if two DIFFERENT English names share one Spanish name the round trip silently
+// resolves to the wrong concept. Repeating the SAME pairing across modules
+// (map -> mapear everywhere) is fine and expected.
+for (const lang of languages) {
+  if (lang === 'en') continue;
+  const byForeign = new Map();
+  const byEnglish = new Map();
+  for (const [mod, concepts] of Object.entries(vocabulary)) {
+    for (const [concept, names] of Object.entries(concepts)) {
+      const foreign = names[lang];
+      const priorEnglish = byForeign.get(foreign);
+      if (priorEnglish !== undefined && priorEnglish !== concept) {
+        failures.push(
+          `NOT BIJECTIVE: "${lang}" name "${foreign}" is used for BOTH ${priorEnglish} and ${mod}.${concept} — the codemod could not translate it back unambiguously`,
+        );
+      }
+      byForeign.set(foreign, concept);
+
+      const priorForeign = byEnglish.get(concept);
+      if (priorForeign !== undefined && priorForeign !== foreign) {
+        failures.push(
+          `NOT BIJECTIVE: concept "${concept}" is named both "${priorForeign}" and "${foreign}" in "${lang}" — pick one so the mapping is stable`,
+        );
+      }
+      byEnglish.set(concept, foreign);
+    }
+  }
+}
+
+// --- GATE 4: grounded in the built package ----------------------------------
 const DIST = {
   birds: 'birds',
   pipe: 'pipe',
