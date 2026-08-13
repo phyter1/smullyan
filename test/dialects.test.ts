@@ -4,7 +4,14 @@ import { describe, it, expect } from 'vitest';
 import * as EsAgent from '../src/lang/es/agent';
 import * as Es from '../src/lang/es/option';
 import * as EsPipe from '../src/lang/es/pipe';
-import { languages, machineReviewed, modules, reviewedBy, vocabulary } from '../src/lang/registry';
+import {
+  languages,
+  machineReviewed,
+  modules,
+  openQuestions,
+  reviewedBy,
+  vocabulary,
+} from '../src/lang/registry';
 import * as O from '../src/option/option';
 import { pipe } from '../src/pipe/pipe';
 
@@ -27,6 +34,63 @@ describe('the registry is honest about what has been verified', () => {
     // recorded as such.
     expect(machineReviewed.es).toContain('adversarial');
     expect(reviewedBy.es).toBeNull();
+  });
+});
+
+describe('open questions are grounded, not prose', () => {
+  // These questions exist to be handed to a native speaker. Left as free text
+  // they rot silently: the registry already shipped a comment arguing for
+  // `segun` long after the value became `plegar`, and a docblock example using
+  // an identifier no dialect exports. A question that names a concept must be
+  // pinned to that concept, or it decays into folklore the same way.
+
+  it('asks about at least one thing', () => {
+    // A guard on the guard: every assertion below is vacuously true over an
+    // empty list, so the suite would stay green if the data vanished.
+    expect(openQuestions.length).toBeGreaterThan(0);
+  });
+
+  it('names a module and concept that actually exist', () => {
+    const dangling = openQuestions.flatMap((q) =>
+      q.sites
+        .filter((s) => vocabulary[s.module]?.[s.concept] === undefined)
+        .map((s) => `${s.module}.${s.concept}`),
+    );
+    expect(dangling).toEqual([]);
+  });
+
+  it('cites at least one site per question', () => {
+    // Without this, a question with no sites passes every check below vacuously.
+    for (const q of openQuestions) expect(q.sites.length).toBeGreaterThan(0);
+  });
+
+  it('quotes the name the registry currently ships, at every site', () => {
+    // The load-bearing assertion. Change `exito` to `acierto` without settling
+    // the question and this goes red, so a rename cannot quietly orphan the
+    // debate that produced it. Across sites it doubles as a consistency check:
+    // `enlazar` must mean flatMap in all four modules or the question is moot.
+    const stale = openQuestions.flatMap((q) =>
+      q.sites
+        .filter((s) => vocabulary[s.module]?.[s.concept]?.[q.language] !== q.current)
+        .map((s) => `${s.module}.${s.concept}: question says ${q.current}`),
+    );
+    expect(stale).toEqual([]);
+  });
+
+  it('offers alternatives that are real choices', () => {
+    for (const q of openQuestions) {
+      expect(q.alternatives.length).toBeGreaterThan(0);
+      // Listing the current name as its own alternative is a non-question.
+      expect(q.alternatives).not.toContain(q.current);
+    }
+  });
+
+  it('only asks about dialects no native speaker has signed off', () => {
+    // A reviewed dialect with open questions is a contradiction: either the
+    // reviewer settled them or the review is incomplete.
+    for (const q of openQuestions) {
+      expect(reviewedBy[q.language]).toBeNull();
+    }
   });
 });
 
