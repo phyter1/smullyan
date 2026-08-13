@@ -145,9 +145,12 @@ test loudly.
 
 ```sh
 pnpm install
-pnpm check    # format, lint, typecheck, tests + coverage gate
-pnpm ci       # the above, plus build and published-package verification
+pnpm check     # format, lint, typecheck, tests + coverage gate
+pnpm run ci    # the above, plus build and published-package verification
 ```
+
+`pnpm run ci`, **not** `pnpm ci` — the latter is a builtin pnpm command aliasing
+`clean-install`, which shadows the script, runs no checks, and still exits 0.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/);
 allowed types and scopes are declared in `.convco` and enforced by a
