@@ -14,3 +14,5 @@ export {
   of as deValor,
   run as ejecutar,
 } from '../../reader/index';
+
+export type { Reader as Lector } from '../../reader/index';

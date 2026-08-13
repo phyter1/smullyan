@@ -214,7 +214,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "typecheck:test": "tsc -p test/tsconfig.json",
     "typecheck:tools": "tsc -p tsconfig.tools.json",
-    "typecheck:all": "pnpm run typecheck && pnpm run typecheck:test && pnpm run typecheck:tools",
+    "typecheck:examples": "tsc -p examples/tsconfig.json",
+    "typecheck:all": "pnpm run typecheck && pnpm run typecheck:test && pnpm run typecheck:tools && pnpm run typecheck:examples",
     "check:dts-emit": "tsc -p tsconfig.build.json --outDir .types-reference",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
@@ -229,7 +230,7 @@
     "check:publint": "publint --strict",
     "verify:package": "bash scripts/verify-package.sh",
     "check:package": "pnpm run build && pnpm run check:dts-emit && pnpm run verify:package",
-    "ci": "pnpm run check && pnpm run check:package && pnpm run docs:check && pnpm run dialects:check",
+    "ci": "pnpm run check && pnpm run check:package && pnpm run docs:check && pnpm run dialects:check && pnpm run examples:check",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm run build && changeset publish",
@@ -248,6 +249,8 @@
     "docs:check": "pnpm run docs:gen && git diff --exit-code --stat -- docs/reference/api.md docs/reference/aviary.md",
     "dialects": "pnpm run build && node scripts/gen-dialects.mjs",
     "dialects:check": "pnpm run dialects && git diff --exit-code --stat -- src/lang",
+    "examples": "node scripts/gen-examples.mjs",
+    "examples:check": "pnpm run examples && git diff --exit-code --stat -- examples",
     "translate": "node scripts/translate.mjs"
   },
   "devDependencies": {

@@ -174,6 +174,86 @@ export const openQuestions: ReadonlyArray<OpenQuestion> = [
       'reads as "to hyperlink". Does the FP sense carry for a developer meeting ' +
       'it cold, or does it need a more descriptive name?',
   },
+
+  // --- Type names -----------------------------------------------------------
+  // The type table added 31 names. Most are derived from a value already in the
+  // registry, or are cognates with one real candidate. These seven were genuine
+  // choices, recorded here rather than quietly decided.
+
+  {
+    language: 'es',
+    current: 'Lector',
+    alternatives: ['Entorno', 'Ambiente', 'Lectora'],
+    sites: [{ module: 'reader', concept: 'Reader' }],
+    question:
+      '`Reader` is named for what it does — read from an injected environment. ' +
+      '`Lector` is the literal agent noun and keeps the metaphor; `Entorno` ' +
+      'names the thing it reads instead, which may describe the type better to ' +
+      'someone who has not met the pattern. Which is clearer in a signature?',
+  },
+  {
+    language: 'es',
+    current: 'TareaResultado',
+    alternatives: ['ResultadoDeTarea', 'TareaConResultado'],
+    sites: [{ module: 'task', concept: 'TaskResult' }],
+    question:
+      'A compound for `Task<Result<E, A>>`. Spanish normally puts the head noun ' +
+      'first with a linking preposition, so stacking two nouns may read as a ' +
+      'calque of English. Is `TareaResultado` acceptable in a type name, or ' +
+      'should it be `ResultadoDeTarea`?',
+  },
+  {
+    language: 'es',
+    current: 'Cadena',
+    alternatives: ['Tuberia', 'Encadenamiento'],
+    sites: [{ module: 'pipe', concept: 'Pipe' }],
+    question:
+      '`Cadena` follows the value `encadenar`, but it is also the ordinary word ' +
+      'for "string" — a live ambiguity in a typed library where strings appear ' +
+      'constantly. Is that collision tolerable, or does the type need another noun?',
+  },
+  {
+    language: 'es',
+    current: 'Espera',
+    alternatives: ['Retardo', 'Dormir'],
+    sites: [{ module: 'agent', concept: 'Sleep' }],
+    question:
+      '`Sleep` is an injected delay capability, not the act of sleeping. ' +
+      '`Espera` ("a wait") names the effect; `Retardo` ("a delay") names the ' +
+      'duration. Which reads better as the type of a parameter?',
+  },
+  {
+    language: 'es',
+    current: 'Retroceso',
+    alternatives: ['Espaciado', 'Reintento'],
+    sites: [{ module: 'agent', concept: 'Backoff' }],
+    question:
+      'The corresponding value is already `espaciando` ("spacing out"). ' +
+      '`Retroceso` is the literal "backing off" but suggests moving backwards ' +
+      'rather than waiting longer between attempts. Should the type follow the ' +
+      'value to `Espaciado`?',
+  },
+  {
+    language: 'es',
+    current: 'ErrorDeHerramienta',
+    alternatives: ['FalloDeHerramienta', 'ErrorDeLlamada'],
+    sites: [{ module: 'agent', concept: 'ToolError' }],
+    question:
+      'The registry uses `fallo` for `err` and `Fallo` for the `Err` type, so ' +
+      '`Error…` here is inconsistent with that choice — but `error` is also the ' +
+      'ordinary word a developer expects. Consistency or familiarity?',
+  },
+  {
+    language: 'es',
+    current: 'RelojFijado',
+    alternatives: ['ConReloj', 'FasesConReloj'],
+    sites: [{ module: 'agent', concept: 'ClockBound' }],
+    question:
+      'The type of what `conReloj` returns: the retry phrases with a clock ' +
+      'already bound in. `RelojFijado` reads as "fixed clock", which describes ' +
+      'the clock rather than the bundle of phrases it produces. Is there a ' +
+      'better noun?',
+  },
 ];
 
 /**
@@ -451,6 +531,96 @@ export const vocabulary: Vocabulary = {
     timedOut: { en: 'timedOut', es: 'tiempoAgotado' },
     unavailable: { en: 'unavailable', es: 'noDisponible' },
     denied: { en: 'denied', es: 'denegado' },
+  },
+};
+
+/**
+ * The TYPE vocabulary, kept separate because the two need different emit.
+ *
+ * A dialect module re-exports values as `export { ok as exito }` and types as
+ * `export type { Result as Resultado }`. Merging the two tables would mean
+ * carrying a `kind` discriminator on every entry and teaching every gate to
+ * branch on it, to save one table.
+ *
+ * Grounding differs too: a type is not a runtime export, so it is verified
+ * against the built `.d.mts` rather than the `.mjs`.
+ *
+ * ## Why these exist at all
+ *
+ * Without them a dialect can only express fully-inferred call sites. The moment
+ * a program writes `Result<Failure, string>` — which real TypeScript does
+ * constantly — it cannot be translated, because no dialect exported the name.
+ * That gap made the codemod unable to translate any annotated program, which is
+ * most of them.
+ *
+ * ## Provenance, honestly
+ *
+ * Some of these are DERIVED from a value name already in the table and inherit
+ * its provenance: `RateLimited` is the type behind `rateLimited`, already named
+ * `tasaExcedida`, so `TasaExcedida` follows rather than being chosen. Others are
+ * cognates with essentially one candidate (`Exponential` → `Exponencial`).
+ *
+ * The rest are new judgement calls, and the contested ones are recorded in
+ * {@link openQuestions} rather than presented as settled. `Flow` → `Flujo` is
+ * deliberately entangled with the still-open question about the VALUE `fluir`:
+ * if a reviewer moves the value to `flujo`, the pair should be revisited
+ * together.
+ *
+ * Bird interfaces are excluded for the same reason bird values are: proper
+ * nouns from a specific book.
+ */
+export const typeVocabulary: Vocabulary = {
+  option: {
+    // Derived: the values `some`/`none` are already `algo`/`nada`.
+    Option: { en: 'Option', es: 'Opcion' },
+    Some: { en: 'Some', es: 'Algo' },
+    None: { en: 'None', es: 'Nada' },
+  },
+
+  result: {
+    Result: { en: 'Result', es: 'Resultado' },
+    // Derived from `ok`/`err`, which carry their own open question about
+    // `exito` vs `acierto` — resolving that moves this name too.
+    Ok: { en: 'Ok', es: 'Exito' },
+    Err: { en: 'Err', es: 'Fallo' },
+  },
+
+  task: {
+    Task: { en: 'Task', es: 'Tarea' },
+    TaskResult: { en: 'TaskResult', es: 'TareaResultado' },
+  },
+
+  reader: {
+    Reader: { en: 'Reader', es: 'Lector' },
+  },
+
+  pipe: {
+    Pipe: { en: 'Pipe', es: 'Cadena' },
+    Flow: { en: 'Flow', es: 'Flujo' },
+  },
+
+  agent: {
+    Tool: { en: 'Tool', es: 'Herramienta' },
+    ToolError: { en: 'ToolError', es: 'ErrorDeHerramienta' },
+    Sleep: { en: 'Sleep', es: 'Espera' },
+    Backoff: { en: 'Backoff', es: 'Retroceso' },
+    RetryPolicy: { en: 'RetryPolicy', es: 'PoliticaDeReintento' },
+    RetryClause: { en: 'RetryClause', es: 'ClausulaDeReintento' },
+    ClockBound: { en: 'ClockBound', es: 'RelojFijado' },
+    Duration: { en: 'Duration', es: 'Duracion' },
+    Attempts: { en: 'Attempts', es: 'Intentos' },
+    Fixed: { en: 'Fixed', es: 'Fijo' },
+    Exponential: { en: 'Exponential', es: 'Exponencial' },
+    Immediate: { en: 'Immediate', es: 'Inmediato' },
+    // The seven error variants below are DERIVED from their constructors, which
+    // are already named in the value table. They are not fresh choices.
+    RateLimited: { en: 'RateLimited', es: 'TasaExcedida' },
+    InvalidArgs: { en: 'InvalidArgs', es: 'ArgumentosNoValidos' },
+    NotFound: { en: 'NotFound', es: 'NoEncontrado' },
+    Timeout: { en: 'Timeout', es: 'TiempoAgotado' },
+    Unavailable: { en: 'Unavailable', es: 'NoDisponible' },
+    Denied: { en: 'Denied', es: 'Denegado' },
+    Unknown: { en: 'Unknown', es: 'Desconocido' },
   },
 };
 
