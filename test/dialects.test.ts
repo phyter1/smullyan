@@ -5,10 +5,13 @@ import * as EsAgent from '../src/lang/es/agent';
 import * as Es from '../src/lang/es/option';
 import * as EsPipe from '../src/lang/es/pipe';
 import {
+  type Language,
   languages,
   machineReviewed,
   modules,
   openQuestions,
+  type ResolvedQuestion,
+  resolvedQuestions,
   reviewedBy,
   vocabulary,
 } from '../src/lang/registry';
@@ -91,6 +94,100 @@ describe('open questions are grounded, not prose', () => {
     for (const q of openQuestions) {
       expect(reviewedBy[q.language]).toBeNull();
     }
+  });
+});
+
+describe('resolved questions keep the reasoning, not just the verdict', () => {
+  // `resolvedQuestions` is empty until a native speaker settles something, so
+  // asserting over it directly would be vacuously green — a rule that has never
+  // run is not a rule. The checks are therefore pure functions, proved to fire
+  // against fixtures below and then applied to the real list.
+
+  const faultsIn = (q: ResolvedQuestion): string[] => {
+    const faults: string[] = [];
+    const { resolution: r } = q;
+
+    // Checked first because every check below indexes the vocabulary BY the
+    // language; an unknown one makes those failures misleading rather than wrong.
+    if (!languages.includes(q.language)) faults.push(`unknown language ${q.language}`);
+    if (q.sites.length === 0) faults.push('cites no site');
+    for (const s of q.sites) {
+      const entry = vocabulary[s.module]?.[s.concept];
+      if (entry === undefined) faults.push(`unknown site ${s.module}.${s.concept}`);
+      else if (entry[q.language] !== q.current) {
+        // The chosen name must be the one actually shipped. A resolution that
+        // records a decision the vocabulary never adopted is fiction.
+        faults.push(`${s.module}.${s.concept} ships ${entry[q.language]}, not ${q.current}`);
+      }
+    }
+    if (q.alternatives.includes(q.current)) faults.push('lists the winner as a loser');
+    if (r.by.trim().length === 0) faults.push('nobody decided it');
+    if (!/^\d{4}-\d{2}-\d{2}$/u.test(r.date)) faults.push(`date ${r.date} is not ISO`);
+    if (r.rationale.trim().length === 0) faults.push('no rationale — the point of keeping it');
+
+    return faults;
+  };
+
+  const valid: ResolvedQuestion = {
+    language: 'es',
+    current: 'exito',
+    alternatives: ['acierto'],
+    sites: [{ module: 'result', concept: 'ok' }],
+    question: 'Does `exito` or `acierto` pair better with `fallo`?',
+    resolution: {
+      by: 'Fixture Reviewer',
+      date: '2026-08-12',
+      rationale: 'Chosen because the fixture says so.',
+      native: true,
+    },
+  };
+
+  it('accepts a well-formed resolution', () => {
+    // Without this the negative cases could pass by rejecting everything.
+    expect(faultsIn(valid)).toEqual([]);
+  });
+
+  it.each([
+    ['a site that does not exist', { sites: [{ module: 'result', concept: 'nope' }] }, 'unknown'],
+    ['a verdict the vocabulary never adopted', { current: 'acierto' }, 'ships exito'],
+    ['no sites at all', { sites: [] }, 'cites no site'],
+    ['the winner listed as an alternative', { alternatives: ['exito'] }, 'winner as a loser'],
+    ['a language the registry does not know', { language: 'fr' as Language }, 'unknown language'],
+  ])('rejects %s', (_label, patch, expected) => {
+    // Joined rather than indexed: one malformation can trip several rules, and
+    // the test should not depend on which fires first.
+    expect(faultsIn({ ...valid, ...patch }).join(' | ')).toContain(expected);
+  });
+
+  it.each([
+    ['an anonymous decision', { by: '   ' }, 'nobody decided'],
+    ['a malformed date', { date: '12/08/2026' }, 'not ISO'],
+    ['a missing rationale', { rationale: '' }, 'no rationale'],
+  ])('rejects %s', (_label, patch, expected) => {
+    expect(
+      faultsIn({ ...valid, resolution: { ...valid.resolution, ...patch } }).join(' | '),
+    ).toContain(expected);
+  });
+
+  it('holds for every resolution actually recorded', () => {
+    // The real gate. Empty today; the fixtures above are what make it trustworthy
+    // on the day it is not.
+    expect(resolvedQuestions.flatMap((q) => faultsIn(q).map((f) => `${q.current}: ${f}`))).toEqual(
+      [],
+    );
+  });
+
+  it('never leaves a question both open and settled', () => {
+    // The one rule that cannot be checked per-entry: a concept must not appear
+    // in both lists for the same language, or the registry contradicts itself
+    // about whether the matter is closed.
+    const key = (lang: string, s: { module: string; concept: string }): string =>
+      `${lang}:${s.module}.${s.concept}`;
+    const open = new Set(openQuestions.flatMap((q) => q.sites.map((s) => key(q.language, s))));
+    const both = resolvedQuestions
+      .flatMap((q) => q.sites.map((s) => key(q.language, s)))
+      .filter((k) => open.has(k));
+    expect(both).toEqual([]);
   });
 });
 
