@@ -22,7 +22,19 @@
     // node globals. The library project (tsconfig.json) keeps `types: []`, which
     // is what guarantees the published .d.ts has zero ambient dependencies.
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+
+    // The example suite imports `examples/`, and those files import by PACKAGE
+    // SPECIFIER — `smullyan/option`, not a relative path — because that is what
+    // a consumer writes and what the codemod keys on. Without these, tsc
+    // resolves them through `dist/` via the exports map, which passes locally
+    // where a build already exists and fails in CI where one does not. That is
+    // a green that depends on the machine, so the mapping is explicit here and
+    // matches examples/tsconfig.json.
+    "paths": {
+      "smullyan/es/*": ["../src/lang/es/*"],
+      "smullyan/*": ["../src/*/index"]
+    }
   },
-  "include": ["./**/*.ts", "../src/**/*.ts"]
+  "include": ["./**/*.ts", "../src/**/*.ts", "../examples/**/*.ts"]
 }
