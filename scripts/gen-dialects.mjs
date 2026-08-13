@@ -233,5 +233,7 @@ execFileSync('pnpm', ['exec', 'oxfmt', 'src/lang'], { cwd: ROOT, stdio: 'ignore'
 
 const total = Object.values(vocabulary).reduce((n, c) => n + Object.keys(c).length, 0);
 console.log(
-  `dialects: ${total} concepts x ${languages.length} languages, ${written} modules generated — total, injective, grounded`,
+  // Names all four gates above. A summary that under-reports what ran is the
+  // same failure as a gate that does not run: you cannot tell from the output.
+  `dialects: ${total} concepts x ${languages.length} languages, ${written} modules generated — total, injective, bijective, grounded`,
 );
