@@ -114,8 +114,9 @@ export interface OpenQuestion {
  * sites it concerns and quotes the name in force, and a test asserts both —
  * a rename cannot orphan the debate that produced it.
  *
- * Answering one means editing the vocabulary and deleting the entry here. The
- * two move together or the build goes red.
+ * Answering one means editing the vocabulary and moving the entry to
+ * {@link resolvedQuestions} with a {@link Resolution} attached. The two move
+ * together or the build goes red.
  */
 export const openQuestions: ReadonlyArray<OpenQuestion> = [
   {
@@ -212,6 +213,50 @@ export const openQuestions: ReadonlyArray<OpenQuestion> = [
       'a combinator. Is the ambiguity real enough at a call site to pay for it?',
   },
 ];
+
+/**
+ * Who settled a naming question, when, and why.
+ *
+ * `native` is a separate field rather than something inferred from `by` for the
+ * same reason {@link reviewedBy} and {@link machineReviewed} are separate
+ * fields: a machine opinion and a native speaker's are not interchangeable, and
+ * a record that blurs them is worse than no record. State it explicitly.
+ */
+export interface Resolution {
+  /** Who decided. A person, or the process that stood in for one. */
+  readonly by: string;
+  /** ISO `YYYY-MM-DD`. */
+  readonly date: string;
+  /** Why this name won — the part that is worth keeping. */
+  readonly rationale: string;
+  /** Whether `by` is a fluent speaker of the dialect. Never assume. */
+  readonly native: boolean;
+}
+
+/** A question that has been settled: the shape of an open one, plus a verdict. */
+export interface ResolvedQuestion extends OpenQuestion {
+  readonly resolution: Resolution;
+}
+
+/**
+ * Questions that have been answered, kept rather than deleted.
+ *
+ * A resolved question is the only durable record of *why* a name was chosen.
+ * The vocabulary shows the verdict; without this, the argument that produced it
+ * is gone, and the next reviewer relitigates it from scratch — or worse, quietly
+ * reverts a decision that was made carefully.
+ *
+ * The invariants are the same as for open questions, and deliberately so:
+ * `current` is the name that WON and must still match the vocabulary at every
+ * site, `alternatives` are the names that lost. Move an entry here without
+ * updating the vocabulary and the build goes red, exactly as before.
+ *
+ * Empty until a native speaker settles something. That emptiness is why the
+ * gates are written as pure functions and proved against fixtures: a rule that
+ * has never run on real data is not a rule, and this list would otherwise sit
+ * vacuously green until the moment it first mattered.
+ */
+export const resolvedQuestions: ReadonlyArray<ResolvedQuestion> = [];
 
 /** A concept: one function, named once per language. */
 export type Entry = Readonly<Record<Language, string>>;

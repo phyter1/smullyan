@@ -26,7 +26,7 @@ The local directory is `~/code/fnctnl`; the package and repo are both
 | Dialects    | `smullyan/es/*` — Spanish, experimental                        |
 | Docs        | VitePress site, generated API reference, deployed to Pages     |
 | Release     | Fully automatic: signed commits, OIDC publish, SLSA provenance |
-| Tests       | 281, 100% coverage, no ignores anywhere                        |
+| Tests       | 292, 100% coverage, no ignores anywhere                        |
 
 ### Open items
 
@@ -37,8 +37,17 @@ The local directory is `~/code/fnctnl`; the package and repo are both
    judgement calls left undecided (`exito` vs `acierto`, `converger` vs
    `convergir`, `preguntar` vs `pedir` for Reader's `ask`, and others). Each is
    structured data pinned to the sites it concerns, so answering one means
-   editing the vocabulary and deleting the question together — do only one and
-   the build goes red.
+   editing the vocabulary and moving the entry to `resolvedQuestions` with a
+   `Resolution` attached — do only one and the build goes red. Resolutions are
+   kept rather than deleted: the vocabulary records the verdict, and this is the
+   only place the argument survives.
+
+   `resolvedQuestions` is empty, so its gates would be vacuous. They are written
+   as a pure `faultsIn` in `test/dialects.test.ts`, proved against fixtures, and
+   then applied to the real list — the pattern to copy for any list that starts
+   empty. Neutering `faultsIn` must fail eight tests; if it does not, the
+   fixtures have stopped being load-bearing.
+
 2. **More languages are a data change, not engineering.** Add a key to every
    entry in `src/lang/registry.ts`; the gates catch anything missed.
 3. **Five subpaths were placeholders once** — all now implemented. If you add a
