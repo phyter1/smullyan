@@ -1,16 +1,17 @@
 /**
  * Generate the dialect modules from the translation registry, and enforce the
- * three properties that make mechanical translation trustworthy.
+ * four properties that make mechanical translation trustworthy.
  *
  *   TOTAL       every concept is named in every language
  *   INJECTIVE   within a module, no two concepts share a name
+ *   BIJECTIVE   globally, one foreign name <-> one concept
  *   GROUNDED    every concept actually exists in the built package
  *
  * Reversibility — `translate(a -> b -> a) === identity` — is asserted as a
  * property test in test/dialects.test.ts, over real source files.
  *
  * Naturalness is a human question and deliberately NOT checked here. These
- * three are mechanical, and they are what stop a translation from being
+ * four are mechanical, and they are what stop a translation from being
  * ambiguous, incomplete, or pointing at something that does not exist.
  *
  * Run `pnpm dialects` to regenerate, `pnpm dialects:check` to verify freshness.
