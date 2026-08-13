@@ -119,13 +119,25 @@ const parseModuleTable = (src, name) => {
   return table;
 };
 
-/** Both registry tables, keyed by module. Values and types translate alike. */
+/**
+ * Both registry tables, keyed by module. Values and types translate alike.
+ *
+ * Memoised because `translate` is called once per file and the property tests
+ * call it hundreds of times per run. Re-reading and re-parsing the registry on
+ * every call cost ~2ms locally and enough on a CI runner to blow the test
+ * timeout — the registry cannot change inside a process, so parsing it once is
+ * both correct and the difference between a 2s suite and a 47s one.
+ */
+let tableCache;
 export const loadModuleTables = () => {
-  const src = readFileSync(new URL('../src/lang/registry.ts', import.meta.url), 'utf8');
-  return {
-    values: parseModuleTable(src, 'vocabulary'),
-    types: parseModuleTable(src, 'typeVocabulary'),
-  };
+  if (tableCache === undefined) {
+    const src = readFileSync(new URL('../src/lang/registry.ts', import.meta.url), 'utf8');
+    tableCache = {
+      values: parseModuleTable(src, 'vocabulary'),
+      types: parseModuleTable(src, 'typeVocabulary'),
+    };
+  }
+  return tableCache;
 };
 
 /** Raised rather than emitting source that cannot compile. */
