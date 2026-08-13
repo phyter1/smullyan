@@ -25,6 +25,8 @@ features:
     details: Runtime tests at 100% coverage, expect-type assertions, @ts-expect-error negative tests, and property-based algebraic laws. Coverage says a function ran; a law says it was correct.
   - title: Honest about its limits
     details: Some identities are true at runtime but inexpressible in TypeScript. Those boundaries are asserted as compile-time facts, not buried in a comment.
+  - title: Translatable
+    details: Because the API is a fixed vocabulary composed positionally, only the identifiers carry language. smullyan/es/* is the same functions under Spanish names, and a codemod moves source between dialects in either direction. Experimental — not yet reviewed by a native speaker.
 ---
 
 ## At a glance

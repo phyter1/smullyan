@@ -3,6 +3,9 @@ import type { bluebird, compose } from '../src/birds/index';
 import { describe, it, expectTypeOf } from 'vitest';
 
 import { B, Y } from '../src/birds/index';
+import * as EsAgent from '../src/lang/es/agent';
+import * as EsOption from '../src/lang/es/option';
+import * as EsPipe from '../src/lang/es/pipe';
 import * as Option from '../src/option/option';
 import { flow, pipe } from '../src/pipe/pipe';
 import * as Reader from '../src/reader/reader';
@@ -45,6 +48,10 @@ type IoError = { readonly kind: 'io' };
 type ParseError = { readonly kind: 'parse' };
 declare const readFile: (p: string) => Result.Result<IoError, string>;
 declare const parseJson: (s: string) => Result.Result<ParseError, number>;
+// Structurally `Sleep`, declared inline rather than imported: this file is a
+// catch-all for every documented example and sits on the max-dependencies
+// limit. Still gated — `conReloj` rejects it if the real signature changes.
+declare const relojDelSistema: (ms: number) => Promise<void>;
 
 describe('docs/index.md — hero', () => {
   it('composition and the Sage bird', () => {
@@ -134,5 +141,34 @@ describe('docs/guide/getting-started.md', () => {
   it('aliases are the same function, and the same type', () => {
     expectTypeOf(B).toEqualTypeOf<typeof bluebird>();
     expectTypeOf(B).toEqualTypeOf<typeof compose>();
+  });
+});
+
+describe('docs/guide/dialects.md', () => {
+  // A dialect page is the likeliest place to publish a name that does not
+  // exist: the reader cannot spot it, and the prose around it reads fluently
+  // either way. The first draft of this page called `reintentar`, which no
+  // dialect exports — the same defect as the `obtenerOSino` example that used
+  // to head the registry. Compiling these is what catches it.
+
+  it('the Spanish Option pipeline', () => {
+    const total = EsPipe.encadenar(
+      EsOption.algo(20),
+      EsOption.mapear((n: number) => n + 1),
+      EsOption.obtenerODefecto(() => 0),
+    );
+    expectTypeOf(total).toEqualTypeOf<number>();
+  });
+
+  it('a dialect is an alias, not a wrapper', () => {
+    // The page claims `Es.mapear === O.map` is literally true. Assert the type
+    // identity here and the runtime identity in test/dialects.test.ts.
+    expectTypeOf(EsOption.mapear).toEqualTypeOf<typeof Option.map>();
+    expectTypeOf(EsPipe.encadenar).toEqualTypeOf<typeof pipe>();
+  });
+
+  it('the agent policy phrases', () => {
+    const { retrying } = EsAgent.conReloj(relojDelSistema);
+    expectTypeOf(retrying(EsAgent.hasta(3).attempts, EsAgent.ignorandoAlServidor)).not.toBeNever();
   });
 });
