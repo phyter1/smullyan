@@ -75,7 +75,10 @@ export const reviewedBy: Readonly<Record<Language, string | null>> = {
  */
 export const machineReviewed: Readonly<Record<Language, string | null>> = {
   en: null,
-  es: '2026-08-12: three adversarial LLM passes, 29 corrections applied',
+  es:
+    '2026-08-12: three adversarial LLM passes, 29 corrections applied; ' +
+    'a fourth documented-usage pass settled 4 of 8 open questions against ' +
+    'cited sources, leaving the 4 that turn on a native ear',
 };
 
 /** Where a contested name is actually used: one module, one concept. */
@@ -146,26 +149,6 @@ export const openQuestions: ReadonlyArray<OpenQuestion> = [
   },
   {
     language: 'es',
-    current: 'converger',
-    alternatives: ['convergir'],
-    sites: [{ module: 'birds', concept: 'converge' }],
-    question:
-      'Both infinitives are attested: `converger` is more peninsular, `convergir` ' +
-      'more common in Latin America. The registry needs one. Which is the safer ' +
-      'neutral choice for a library read by both?',
-  },
-  {
-    language: 'es',
-    current: 'desdeSincrono',
-    alternatives: ['desdeSincronico'],
-    sites: [{ module: 'task', concept: 'fromSync' }],
-    question:
-      '`sincrono` is the technical form in Spain; `sincronico` is more usual in ' +
-      'Latin America. Same regional split as converge/convergir, and it should ' +
-      'probably be resolved the same way for consistency.',
-  },
-  {
-    language: 'es',
     current: 'preguntar',
     alternatives: ['pedir', 'obtenerEntorno'],
     sites: [{ module: 'reader', concept: 'ask' }],
@@ -190,27 +173,6 @@ export const openQuestions: ReadonlyArray<OpenQuestion> = [
       'way Spanish-speaking FP writing tends to. But outside that context it ' +
       'reads as "to hyperlink". Does the FP sense carry for a developer meeting ' +
       'it cold, or does it need a more descriptive name?',
-  },
-  {
-    language: 'es',
-    current: 'fluir',
-    alternatives: ['flujo'],
-    sites: [{ module: 'pipe', concept: 'flow' }],
-    question:
-      '`fluir` is the intransitive verb "to flow"; `flow` here is a noun — the ' +
-      'composed pipeline. `flujo` is the noun. Every other name in this module ' +
-      'is a verb (`encadenar`), so the verb form is consistent but arguably ' +
-      'describes the wrong thing. Consistency or accuracy?',
-  },
-  {
-    language: 'es',
-    current: 'par',
-    alternatives: ['parOrdenado', 'dupla'],
-    sites: [{ module: 'birds', concept: 'pair' }],
-    question:
-      '`par` also means "even number", which is a live ambiguity in a numeric ' +
-      'library. `par ordenado` is the standard mathematical term but is long for ' +
-      'a combinator. Is the ambiguity real enough at a call site to pay for it?',
   },
 ];
 
@@ -256,7 +218,93 @@ export interface ResolvedQuestion extends OpenQuestion {
  * has never run on real data is not a rule, and this list would otherwise sit
  * vacuously green until the moment it first mattered.
  */
-export const resolvedQuestions: ReadonlyArray<ResolvedQuestion> = [];
+export const resolvedQuestions: ReadonlyArray<ResolvedQuestion> = [
+  {
+    language: 'es',
+    current: 'converger',
+    alternatives: ['convergir'],
+    sites: [{ module: 'birds', concept: 'converge' }],
+    question:
+      'Both infinitives are attested. Which is the safer neutral choice for a ' +
+      'library read across regions?',
+    resolution: {
+      by: 'documented-usage pass (RAE Diccionario panhispánico de dudas)',
+      date: '2026-08-12',
+      rationale:
+        'Kept `converger`. The question assumed a regional split — peninsular ' +
+        'vs Latin American — and that premise is unsupported: the DPD records ' +
+        'both infinitives as valid and describes the difference as FREQUENCY, ' +
+        'not geography, with `converger` the more frequent form and `convergir` ' +
+        'valid but less common across the Spanish-speaking world generally. No ' +
+        'source consulted documents a Spain/Latin America distribution. Keeping ' +
+        'the more frequent form is therefore the neutral choice, and the ' +
+        'original reasoning for changing it was mistaken.',
+      native: false,
+    },
+  },
+  {
+    language: 'es',
+    current: 'desdeSincrono',
+    alternatives: ['desdeSincronico'],
+    sites: [{ module: 'task', concept: 'fromSync' }],
+    question: '`sincrono` vs `sincronico` — is one regionally safer for a computing audience?',
+    resolution: {
+      by: 'documented-usage pass (Spanish-language programming literature)',
+      date: '2026-08-12',
+      rationale:
+        'Kept `desdeSincrono`. In computing specifically, the `sincrono` / ' +
+        '`asincrono` pair is the established terminology across regions — ' +
+        '"programacion asincrona", "codigo sincrono" — and dominates ' +
+        'Spanish-language technical writing regardless of origin. `sincronico` ' +
+        'is a valid adjective in general Spanish but is not the term of art ' +
+        'here. This is a domain-usage question rather than a regional one.',
+      native: false,
+    },
+  },
+  {
+    language: 'es',
+    current: 'fluir',
+    alternatives: ['flujo'],
+    sites: [{ module: 'pipe', concept: 'flow' }],
+    question:
+      '`flow` is a noun in English; `fluir` is a verb and `flujo` the noun. ' +
+      'Consistency with the rest of the module, or accuracy to the part of speech?',
+    resolution: {
+      by: 'internal consistency (not a question about Spanish)',
+      date: '2026-08-12',
+      rationale:
+        'Kept `fluir`. This resolved without needing fluency: the module names ' +
+        'its other export `encadenar`, a verb, and both functions are actions ' +
+        'that build a composed pipeline. A verb/noun mix within a two-export ' +
+        'module reads worse than either choice made consistently. The argument ' +
+        'is about this codebase rather than about Spanish, which is why it did ' +
+        'not need a native speaker — but see `enlazar`, still open, where the ' +
+        'same surface question does.',
+      native: false,
+    },
+  },
+  {
+    language: 'es',
+    current: 'par',
+    alternatives: ['parOrdenado', 'dupla'],
+    sites: [{ module: 'birds', concept: 'pair' }],
+    question:
+      '`par` also means "even number". Is that ambiguity real enough at a call ' +
+      'site to pay for a longer name?',
+    resolution: {
+      by: 'documented-usage pass (mathematical terminology)',
+      date: '2026-08-12',
+      rationale:
+        'Kept `par`. `par ordenado` is the standard mathematical term and `par` ' +
+        'is its ordinary short form; `dupla` is attested as a synonym but is ' +
+        'the rarer of the two. The "even number" sense is a real ambiguity in ' +
+        'isolation but is resolved by position at every call site, since `par` ' +
+        'here is applied to two values and never to a number. A longer name ' +
+        'would buy disambiguation this library does not need.',
+      native: false,
+    },
+  },
+];
 
 /** A concept: one function, named once per language. */
 export type Entry = Readonly<Record<Language, string>>;

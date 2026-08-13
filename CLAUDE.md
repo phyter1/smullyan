@@ -33,9 +33,15 @@ The local directory is `~/code/fnctnl`; the package and repo are both
 1. **Spanish needs a native speaker.** `reviewedBy.es` is `null`. Three
    adversarial LLM reviews produced 29 corrections, recorded in
    `machineReviewed` — deliberately NOT the same field, because machine review
-   is not native review. `openQuestions` in `src/lang/registry.ts` lists eight
-   judgement calls left undecided (`exito` vs `acierto`, `converger` vs
-   `convergir`, `preguntar` vs `pedir` for Reader's `ask`, and others). Each is
+   is not native review. `openQuestions` in `src/lang/registry.ts` lists the
+   **four** judgement calls that remain (`exito` vs `acierto`, `desdeAnulable`,
+   `preguntar` vs `pedir` for Reader's `ask`, and `enlazar` for flatMap). The
+   other four were settled against cited sources rather than intuition and are
+   recorded in `resolvedQuestions` with `native: false` — that flag is the whole
+   point, so a documented-usage decision can never be mistaken for a native one.
+   One of them corrected a false premise: `converger`/`convergir` was recorded as
+   a regional split, but the DPD describes a frequency difference and no source
+   documents a Spain/Latin America distribution. Each is
    structured data pinned to the sites it concerns, so answering one means
    editing the vocabulary and moving the entry to `resolvedQuestions` with a
    `Resolution` attached — do only one and the build goes red. Resolutions are
