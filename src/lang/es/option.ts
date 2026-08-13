@@ -24,3 +24,5 @@ export {
   toUndefined as aIndefinido,
   traverse as atravesar,
 } from '../../option/index';
+
+export type { None as Nada, Option as Opcion, Some as Algo } from '../../option/index';

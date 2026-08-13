@@ -21,3 +21,5 @@ export {
   sequence as secuenciar,
   traverse as atravesar,
 } from '../../result/index';
+
+export type { Err as Fallo, Ok as Exito, Result as Resultado } from '../../result/index';

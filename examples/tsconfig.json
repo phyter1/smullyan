@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Examples are consumer code, not the product. `isolatedDeclarations` is a
+    // constraint on the published type surface and would only add noise here.
+    "isolatedDeclarations": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+
+    // Examples import by package specifier — `smullyan/option`, not a relative
+    // path — because that is what a consumer writes AND what the codemod keys
+    // on. These paths resolve those specifiers to source, so typechecking an
+    // example never depends on `dist/` having been built first.
+    "paths": {
+      "smullyan/es/*": ["../src/lang/es/*"],
+      "smullyan/*": ["../src/*/index"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

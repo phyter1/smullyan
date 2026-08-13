@@ -64,32 +64,142 @@ export const renameMap = (vocabulary, from, to) => {
   return map;
 };
 
-/** `smullyan/option` <-> `smullyan/es/option`. English has no path segment. */
-const rewriteSpecifier = (spec, from, to) => {
-  const stripped = from === 'en' ? spec : spec.replace(`smullyan/${from}/`, 'smullyan/');
-  if (!stripped.startsWith('smullyan')) return spec;
-  return to === 'en' ? stripped : stripped.replace('smullyan/', `smullyan/${to}/`);
+/** Parse one registry table, preserving module structure. */
+const parseModuleTable = (src, name) => {
+  const at = src.indexOf(`export const ${name}: Vocabulary = {`);
+  if (at === -1) throw new Error(`registry: could not find \`${name}\``);
+  const open = src.indexOf('{', at);
+  let depth = 0;
+  let end = -1;
+  for (let i = open; i < src.length; i += 1) {
+    if (src[i] === '{') depth += 1;
+    else if (src[i] === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  const body = src.slice(open, end + 1);
+  const table = {};
+  const moduleRe = /(\w+):\s*\{/g;
+  let m;
+  const starts = [];
+  while ((m = moduleRe.exec(body)) !== null) starts.push({ mod: m[1], at: m.index });
+
+  for (const { mod, at: modAt } of starts) {
+    let d = 0;
+    for (let i = 0; i < modAt; i += 1) {
+      if (body[i] === '{') d += 1;
+      else if (body[i] === '}') d -= 1;
+    }
+    if (d !== 1) continue;
+    const openAt = body.indexOf('{', modAt);
+    let dd = 0;
+    let closeAt = -1;
+    for (let i = openAt; i < body.length; i += 1) {
+      if (body[i] === '{') dd += 1;
+      else if (body[i] === '}') {
+        dd -= 1;
+        if (dd === 0) {
+          closeAt = i;
+          break;
+        }
+      }
+    }
+    const concepts = {};
+    for (const c of body.slice(openAt, closeAt + 1).matchAll(/(\w+):\s*\{([^}]*)\}/g)) {
+      const names = {};
+      for (const n of c[2].matchAll(/(\w+):\s*'([^']*)'/g)) names[n[1]] = n[2];
+      concepts[c[1]] = names;
+    }
+    table[mod] = concepts;
+  }
+  return table;
+};
+
+/**
+ * Both registry tables, keyed by module. Values and types translate alike.
+ *
+ * Memoised because `translate` is called once per file and the property tests
+ * call it hundreds of times per run. Re-reading and re-parsing the registry on
+ * every call cost ~2ms locally and enough on a CI runner to blow the test
+ * timeout — the registry cannot change inside a process, so parsing it once is
+ * both correct and the difference between a 2s suite and a 47s one.
+ */
+let tableCache;
+export const loadModuleTables = () => {
+  if (tableCache === undefined) {
+    const src = readFileSync(new URL('../src/lang/registry.ts', import.meta.url), 'utf8');
+    tableCache = {
+      values: parseModuleTable(src, 'vocabulary'),
+      types: parseModuleTable(src, 'typeVocabulary'),
+    };
+  }
+  return tableCache;
+};
+
+/** Raised rather than emitting source that cannot compile. */
+export class UntranslatableError extends Error {}
+
+const SPECIFIER = /^smullyan\/(?:([a-z-]+)\/)?(\w+)$/;
+
+/**
+ * Which registry module a specifier refers to, or null if it is not an import
+ * from the SOURCE dialect. `smullyan/es/option` read with `from: 'en'` is
+ * already Spanish and must be left alone.
+ */
+const moduleOf = (spec, from) => {
+  const m = SPECIFIER.exec(spec);
+  if (m === null) return null;
+  const [, lang, mod] = m;
+  return from === 'en' ? (lang === undefined ? mod : null) : lang === from ? mod : null;
 };
 
 /**
  * Translate one source file.
  *
- * Two passes. The first reads every `import ... from 'smullyan...'` statement,
- * collecting the local names bound from a smullyan module and rewriting the
- * specifier. The second renames only those collected names, so an unrelated
- * local called `map` survives untouched.
+ * Module-aware on purpose. The rename map used to be global, which meant
+ * `fromPromise` imported from `smullyan/agent` was renamed to `desdePromesa` —
+ * the name belonging to `task.fromPromise` — and `smullyan/es/agent` does not
+ * export it. Looking names up in the module they were imported FROM is what
+ * makes the output compile.
+ *
+ * Names with no counterpart in that module are a hard error rather than a
+ * silent pass-through: moving the specifier while leaving the name behind
+ * produces an import of something that does not exist.
  */
-export const translate = (source, from, to, vocabulary = loadVocabulary()) => {
-  const rename = renameMap(vocabulary, from, to);
+export const translate = (source, from, to) => {
+  const tables = loadModuleTables();
+
+  const mapFor = (mod) => {
+    const map = new Map();
+    for (const table of [tables.values, tables.types]) {
+      for (const names of Object.values(table[mod] ?? {})) {
+        if (names[from] !== undefined && names[to] !== undefined) map.set(names[from], names[to]);
+      }
+    }
+    return map;
+  };
+
+  const missing = [];
   const imported = new Set();
 
   const importRe = /import\s*(?:type\s*)?\{([^}]*)\}\s*from\s*(['"])([^'"]+)\2/g;
   let out = source.replace(importRe, (whole, clause, quote, spec) => {
-    if (!spec.startsWith('smullyan')) return whole;
-    const newSpec = rewriteSpecifier(spec, from, to);
+    const mod = moduleOf(spec, from);
+    if (mod === null) return whole;
+    const map = mapFor(mod);
+    const newSpec = to === 'en' ? `smullyan/${mod}` : `smullyan/${to}/${mod}`;
+
     const newClause = clause.replace(/(\w+)(\s+as\s+\w+)?/g, (bit, name, alias) => {
-      const target = rename.get(name);
-      if (target === undefined) return bit;
+      if (name === 'type') return bit;
+      const target = map.get(name);
+      if (target === undefined) {
+        missing.push(`${name} (imported from ${spec})`);
+        return bit;
+      }
       // With an alias the local name is unchanged; only the imported name moves.
       if (alias !== undefined) return `${target}${alias}`;
       imported.add(name);
@@ -98,14 +208,41 @@ export const translate = (source, from, to, vocabulary = loadVocabulary()) => {
     return `import ${whole.includes('import type') ? 'type ' : ''}{${newClause}} from ${quote}${newSpec}${quote}`;
   });
 
-  // Namespace imports bind nothing translatable, but the specifier still moves.
+  // Namespace imports bind a whole module. The specifier moves AND every member
+  // access through the binding must be renamed — `O.some` against a module that
+  // exports `algo` is exactly the broken output this used to emit.
+  const namespaces = [];
   out = out.replace(
-    /import\s+\*\s+as\s+(\w+)\s+from\s+(['"])([^'"]+)\2/g,
-    (whole, ns, quote, spec) =>
-      spec.startsWith('smullyan')
-        ? `import * as ${ns} from ${quote}${rewriteSpecifier(spec, from, to)}${quote}`
-        : whole,
+    /import\s+(type\s+)?\*\s+as\s+(\w+)\s+from\s+(['"])([^'"]+)\3/g,
+    (whole, typeKw, ns, quote, spec) => {
+      const mod = moduleOf(spec, from);
+      if (mod === null) return whole;
+      namespaces.push({ ns, mod });
+      const newSpec = to === 'en' ? `smullyan/${mod}` : `smullyan/${to}/${mod}`;
+      return `import ${typeKw ?? ''}* as ${ns} from ${quote}${newSpec}${quote}`;
+    },
   );
+
+  for (const { ns, mod } of namespaces) {
+    const map = mapFor(mod);
+    out = out.replace(new RegExp(`\\b${ns}\\.(\\w+)`, 'g'), (whole, member) => {
+      const target = map.get(member);
+      if (target === undefined) {
+        missing.push(`${ns}.${member} (from ${mod})`);
+        return whole;
+      }
+      return `${ns}.${target}`;
+    });
+  }
+
+  if (missing.length > 0) {
+    throw new UntranslatableError(
+      `no ${to} name for:\n  ${[...new Set(missing)].join('\n  ')}\n\n` +
+        `Refusing to translate: moving the module specifier while leaving these ` +
+        `names behind would emit an import of something that does not exist. Add ` +
+        `them to src/lang/registry.ts, or leave the file untranslated.`,
+    );
+  }
 
   if (imported.size === 0) return out;
 
@@ -114,11 +251,16 @@ export const translate = (source, from, to, vocabulary = loadVocabulary()) => {
   const names = [...imported].sort((a, b) => b.length - a.length);
   const bodyRe = new RegExp(`(?<![.\\w$])(${names.join('|')})(?![\\w$:])`, 'g');
 
-  const [head, ...rest] = out.split(
-    /(?<=\n)(?=(?:const|let|var|function|class|export|type|interface|\/\*\*|\/\/))/,
-  );
-  void head;
-  void rest;
+  const rename = new Map();
+  for (const { mod } of namespaces) void mod;
+  for (const table of [tables.values, tables.types]) {
+    for (const concepts of Object.values(table)) {
+      for (const n of Object.values(concepts)) {
+        if (n[from] !== undefined && n[to] !== undefined) rename.set(n[from], n[to]);
+      }
+    }
+  }
+
   return out.replace(bodyRe, (name, _g, offset) => {
     // Leave import clauses alone; they were rewritten above.
     const lineStart = out.lastIndexOf('\n', offset) + 1;

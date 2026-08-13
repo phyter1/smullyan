@@ -57,6 +57,7 @@ export default defineConfig({
           { text: 'Working with Option and Result', link: '/guide/option-result' },
           { text: 'Task and Reader', link: '/guide/task-reader' },
           { text: 'Tool calls for agents', link: '/guide/agent' },
+          { text: 'Dialects', link: '/guide/dialects' },
         ],
       },
       {
@@ -73,6 +74,7 @@ export default defineConfig({
           { text: 'Typing combinators', link: '/design/typing-combinators' },
           { text: 'Where the types give out', link: '/design/type-boundaries' },
           { text: 'How this is tested', link: '/design/testing' },
+          { text: 'Translating a library', link: '/design/dialects' },
           { text: 'Build and supply chain', link: '/design/supply-chain' },
         ],
       },

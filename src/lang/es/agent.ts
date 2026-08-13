@@ -33,3 +33,25 @@ export {
   withClock as conReloj,
   within as dentroDe,
 } from '../../agent/index';
+
+export type {
+  Attempts as Intentos,
+  Backoff as Retroceso,
+  ClockBound as RelojFijado,
+  Denied as Denegado,
+  Duration as Duracion,
+  Exponential as Exponencial,
+  Fixed as Fijo,
+  Immediate as Inmediato,
+  InvalidArgs as ArgumentosNoValidos,
+  NotFound as NoEncontrado,
+  RateLimited as TasaExcedida,
+  RetryClause as ClausulaDeReintento,
+  RetryPolicy as PoliticaDeReintento,
+  Sleep as Espera,
+  Timeout as TiempoAgotado,
+  Tool as Herramienta,
+  ToolError as ErrorDeHerramienta,
+  Unavailable as NoDisponible,
+  Unknown as Desconocido,
+} from '../../agent/index';

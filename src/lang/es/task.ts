@@ -14,3 +14,5 @@ export {
   sequential as enSecuencia,
   tryCatch as intentar,
 } from '../../task/index';
+
+export type { Task as Tarea, TaskResult as TareaResultado } from '../../task/index';

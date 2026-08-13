@@ -13,6 +13,7 @@ import {
   type ResolvedQuestion,
   resolvedQuestions,
   reviewedBy,
+  typeVocabulary,
   vocabulary,
 } from '../src/lang/registry';
 import * as O from '../src/option/option';
@@ -40,6 +41,14 @@ describe('the registry is honest about what has been verified', () => {
   });
 });
 
+/**
+ * A question may concern a value or a type, and the two live in separate tables
+ * because they need different emit. Grounding must span both, or adding a type
+ * question would silently fail the gate that exists to keep questions honest.
+ */
+const entryAt = (module: string, concept: string): Readonly<Record<string, string>> | undefined =>
+  vocabulary[module]?.[concept] ?? typeVocabulary[module]?.[concept];
+
 describe('open questions are grounded, not prose', () => {
   // These questions exist to be handed to a native speaker. Left as free text
   // they rot silently: the registry already shipped a comment arguing for
@@ -56,7 +65,7 @@ describe('open questions are grounded, not prose', () => {
   it('names a module and concept that actually exist', () => {
     const dangling = openQuestions.flatMap((q) =>
       q.sites
-        .filter((s) => vocabulary[s.module]?.[s.concept] === undefined)
+        .filter((s) => entryAt(s.module, s.concept) === undefined)
         .map((s) => `${s.module}.${s.concept}`),
     );
     expect(dangling).toEqual([]);
@@ -74,7 +83,7 @@ describe('open questions are grounded, not prose', () => {
     // `enlazar` must mean flatMap in all four modules or the question is moot.
     const stale = openQuestions.flatMap((q) =>
       q.sites
-        .filter((s) => vocabulary[s.module]?.[s.concept]?.[q.language] !== q.current)
+        .filter((s) => entryAt(s.module, s.concept)?.[q.language] !== q.current)
         .map((s) => `${s.module}.${s.concept}: question says ${q.current}`),
     );
     expect(stale).toEqual([]);
@@ -112,7 +121,7 @@ describe('resolved questions keep the reasoning, not just the verdict', () => {
     if (!languages.includes(q.language)) faults.push(`unknown language ${q.language}`);
     if (q.sites.length === 0) faults.push('cites no site');
     for (const s of q.sites) {
-      const entry = vocabulary[s.module]?.[s.concept];
+      const entry = entryAt(s.module, s.concept);
       if (entry === undefined) faults.push(`unknown site ${s.module}.${s.concept}`);
       else if (entry[q.language] !== q.current) {
         // The chosen name must be the one actually shipped. A resolution that
@@ -314,11 +323,39 @@ export const result = pipe(
     expect(es).toContain('export const f = transform;');
   });
 
-  it('moves namespace-import specifiers without touching the binding', () => {
+  it('renames members reached through a namespace import', () => {
+    // This test used to assert that `O.some(1)` was left ALONE while the
+    // specifier moved — which emits `O.some` against a module exporting `algo`.
+    // The assertion pinned broken output as correct, which is why nothing
+    // caught it until an example program was compiled.
     const ns = `import * as O from 'smullyan/option';\nexport const x = O.some(1);\n`;
     const es = translate(ns, 'en', 'es');
     expect(es).toContain("import * as O from 'smullyan/es/option'");
-    expect(es).toContain('O.some(1)');
+    expect(es).toContain('O.algo(1)');
+    expect(es).not.toContain('O.some');
+  });
+
+  it('translates type names, not just values', () => {
+    // Without these a dialect can only express fully-inferred call sites, which
+    // excludes most real TypeScript.
+    const typed = `import type { Result } from 'smullyan/result';\nexport type R = Result<string, number>;\n`;
+    const es = translate(typed, 'en', 'es');
+    expect(es).toContain("from 'smullyan/es/result'");
+    expect(es).toContain('Resultado');
+  });
+
+  it('refuses to emit an import of something that does not exist', () => {
+    // `retry` has no Spanish name. Moving the specifier to `smullyan/es/agent`
+    // while leaving `retry` behind would produce a file that cannot compile, so
+    // the codemod fails loudly instead.
+    const untranslatable = `import { retry } from 'smullyan/agent';\nexport const r = retry;\n`;
+    expect(() => translate(untranslatable, 'en', 'es')).toThrow(/no es name for/u);
+  });
+
+  it('leaves an already-translated file alone', () => {
+    // `smullyan/es/option` read with from: 'en' is not an English import.
+    const already = `import { algo } from 'smullyan/es/option';\nexport const x = algo;\n`;
+    expect(translate(already, 'en', 'es')).toBe(already);
   });
 });
 

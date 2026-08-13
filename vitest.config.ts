@@ -1,6 +1,28 @@
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // `examples/` imports by package specifier — `smullyan/option`, not a relative
+  // path — because that is what a consumer writes AND what the codemod keys on.
+  // These aliases resolve those to source, so the example suite never depends on
+  // `dist/` having been built first. Nothing else in the repo imports by
+  // specifier, so no existing test is affected.
+  //
+  // Order matters: the `es/` pattern must be tried before the general one.
+  resolve: {
+    alias: [
+      {
+        find: /^smullyan\/es\/(.*)$/,
+        replacement: fileURLToPath(new URL('./src/lang/es/$1.ts', import.meta.url)),
+      },
+      {
+        find: /^smullyan\/(.*)$/,
+        replacement: fileURLToPath(new URL('./src/$1/index.ts', import.meta.url)),
+      },
+    ],
+  },
+
   test: {
     // Runtime tests only. MUST NOT overlap typecheck.include — since Vitest 2.1
     // overlapping patterns register the file twice (once per pool) instead of

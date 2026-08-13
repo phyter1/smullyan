@@ -37,8 +37,17 @@ const loadRegistry = () => {
   if (!langs) throw new Error('registry: could not read `languages`');
   const languages = [...langs[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
 
-  const start = src.indexOf('export const vocabulary: Vocabulary = {');
-  if (start === -1) throw new Error('registry: could not find `vocabulary`');
+  return {
+    languages,
+    vocabulary: parseTable(src, 'vocabulary'),
+    typeVocabulary: parseTable(src, 'typeVocabulary'),
+  };
+};
+
+/** Extract one `export const <name>: Vocabulary = { … }` table as data. */
+const parseTable = (src, name) => {
+  const start = src.indexOf(`export const ${name}: Vocabulary = {`);
+  if (start === -1) throw new Error(`registry: could not find \`${name}\``);
   const open = src.indexOf('{', start);
   let depth = 0;
   let end = -1;
@@ -52,17 +61,17 @@ const loadRegistry = () => {
       }
     }
   }
-  if (end === -1) throw new Error('registry: unbalanced braces in `vocabulary`');
+  if (end === -1) throw new Error(`registry: unbalanced braces in \`${name}\``);
 
   const body = src.slice(open, end + 1);
-  const vocabulary = {};
+  const table = {};
   // module: { concept: { en: 'x', es: 'y' }, ... }
   const moduleRe = /(\w+):\s*\{/g;
   let m;
   const moduleStarts = [];
   while ((m = moduleRe.exec(body)) !== null) moduleStarts.push({ name: m[1], at: m.index });
 
-  for (const { name, at } of moduleStarts) {
+  for (const { name: modName, at } of moduleStarts) {
     // Only top-level modules: those whose brace depth from the start is 1.
     let d = 0;
     for (let i = 0; i < at; i += 1) {
@@ -91,68 +100,96 @@ const loadRegistry = () => {
       for (const n of c[2].matchAll(/(\w+):\s*'([^']*)'/g)) names[n[1]] = n[2];
       concepts[c[1]] = names;
     }
-    vocabulary[name] = concepts;
+    table[modName] = concepts;
   }
-  return { languages, vocabulary };
+  return table;
 };
 
-const { languages, vocabulary } = loadRegistry();
+const { languages, vocabulary, typeVocabulary } = loadRegistry();
 const failures = [];
 
-// --- GATE 1: total ---------------------------------------------------------
-for (const [mod, concepts] of Object.entries(vocabulary)) {
-  for (const [concept, names] of Object.entries(concepts)) {
-    for (const lang of languages) {
-      if (typeof names[lang] !== 'string' || names[lang].length === 0) {
-        failures.push(`NOT TOTAL: ${mod}.${concept} has no "${lang}" name`);
-      }
-    }
-  }
-}
-
-// --- GATE 2: injective, per module per language -----------------------------
-for (const [mod, concepts] of Object.entries(vocabulary)) {
-  for (const lang of languages) {
-    const seen = new Map();
+// --- GATES 1-3, applied to BOTH the value and the type table -----------------
+// Types are a separate table because they need `export type` emit and are
+// grounded against the .d.mts rather than the .mjs. The three structural
+// properties are identical, so they are checked by one function over both.
+const checkStructure = (table, label) => {
+  // GATE 1: total
+  for (const [mod, concepts] of Object.entries(table)) {
     for (const [concept, names] of Object.entries(concepts)) {
-      const name = names[lang];
-      if (seen.has(name)) {
-        failures.push(
-          `NOT INJECTIVE: ${mod} "${lang}" maps both ${seen.get(name)} and ${concept} to "${name}" — translation would be ambiguous`,
-        );
+      for (const lang of languages) {
+        if (typeof names[lang] !== 'string' || names[lang].length === 0) {
+          failures.push(`NOT TOTAL (${label}): ${mod}.${concept} has no "${lang}" name`);
+        }
       }
-      seen.set(name, concept);
     }
   }
-}
 
-// --- GATE 3: globally bijective --------------------------------------------
-// Per-module injectivity is not enough. The codemod's rename map is global, so
-// if two DIFFERENT English names share one Spanish name the round trip silently
-// resolves to the wrong concept. Repeating the SAME pairing across modules
-// (map -> mapear everywhere) is fine and expected.
+  // GATE 2: injective, per module per language
+  for (const [mod, concepts] of Object.entries(table)) {
+    for (const lang of languages) {
+      const seen = new Map();
+      for (const [concept, names] of Object.entries(concepts)) {
+        const name = names[lang];
+        if (seen.has(name)) {
+          failures.push(
+            `NOT INJECTIVE (${label}): ${mod} "${lang}" maps both ${seen.get(name)} and ${concept} to "${name}" — translation would be ambiguous`,
+          );
+        }
+        seen.set(name, concept);
+      }
+    }
+  }
+
+  // GATE 3: globally bijective
+  // Per-module injectivity is not enough. The codemod's rename map is global, so
+  // if two DIFFERENT English names share one foreign name the round trip silently
+  // resolves to the wrong concept. Repeating the SAME pairing across modules
+  // (map -> mapear everywhere) is fine and expected.
+  for (const lang of languages) {
+    if (lang === 'en') continue;
+    const byForeign = new Map();
+    const byEnglish = new Map();
+    for (const [mod, concepts] of Object.entries(table)) {
+      for (const [concept, names] of Object.entries(concepts)) {
+        const foreign = names[lang];
+        const priorEnglish = byForeign.get(foreign);
+        if (priorEnglish !== undefined && priorEnglish !== concept) {
+          failures.push(
+            `NOT BIJECTIVE (${label}): "${lang}" name "${foreign}" is used for BOTH ${priorEnglish} and ${mod}.${concept} — the codemod could not translate it back unambiguously`,
+          );
+        }
+        byForeign.set(foreign, concept);
+
+        const priorForeign = byEnglish.get(concept);
+        if (priorForeign !== undefined && priorForeign !== foreign) {
+          failures.push(
+            `NOT BIJECTIVE (${label}): concept "${concept}" is named both "${priorForeign}" and "${foreign}" in "${lang}" — pick one so the mapping is stable`,
+          );
+        }
+        byEnglish.set(concept, foreign);
+      }
+    }
+  }
+};
+
+checkStructure(vocabulary, 'values');
+checkStructure(typeVocabulary, 'types');
+
+// A type and a value must never share a foreign name. They live in separate
+// declaration spaces in TypeScript, but the codemod renames by identifier text
+// and cannot tell them apart.
 for (const lang of languages) {
   if (lang === 'en') continue;
-  const byForeign = new Map();
-  const byEnglish = new Map();
-  for (const [mod, concepts] of Object.entries(vocabulary)) {
+  const valueNames = new Set(
+    Object.values(vocabulary).flatMap((c) => Object.values(c).map((n) => n[lang])),
+  );
+  for (const [mod, concepts] of Object.entries(typeVocabulary)) {
     for (const [concept, names] of Object.entries(concepts)) {
-      const foreign = names[lang];
-      const priorEnglish = byForeign.get(foreign);
-      if (priorEnglish !== undefined && priorEnglish !== concept) {
+      if (valueNames.has(names[lang])) {
         failures.push(
-          `NOT BIJECTIVE: "${lang}" name "${foreign}" is used for BOTH ${priorEnglish} and ${mod}.${concept} — the codemod could not translate it back unambiguously`,
+          `TYPE/VALUE COLLISION: "${lang}" name "${names[lang]}" is used for both a value and the type ${mod}.${concept} — the codemod renames by text and cannot distinguish them`,
         );
       }
-      byForeign.set(foreign, concept);
-
-      const priorForeign = byEnglish.get(concept);
-      if (priorForeign !== undefined && priorForeign !== foreign) {
-        failures.push(
-          `NOT BIJECTIVE: concept "${concept}" is named both "${priorForeign}" and "${foreign}" in "${lang}" — pick one so the mapping is stable`,
-        );
-      }
-      byEnglish.set(concept, foreign);
     }
   }
 }
@@ -187,6 +224,27 @@ for (const [mod, concepts] of Object.entries(vocabulary)) {
   }
 }
 
+// Types are not runtime exports, so grounding them means reading the emitted
+// declarations. Taking the inventory from the BUILT .d.mts rather than from src
+// is the point: a type that stopped being exported must fail here, and only the
+// build knows that.
+for (const [mod, concepts] of Object.entries(typeVocabulary)) {
+  const stem = DIST[mod];
+  if (stem === undefined) {
+    failures.push(`UNGROUNDED: type module "${mod}" has no dist entry point`);
+    continue;
+  }
+  const dts = readFileSync(join(ROOT, `dist/${stem}.d.mts`), 'utf8');
+  const declared = new Set([...dts.matchAll(/\btype\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1]));
+  for (const concept of Object.keys(concepts)) {
+    if (!declared.has(concept)) {
+      failures.push(
+        `UNGROUNDED (type): ${mod}.${concept} is in the type registry but not exported as a type by smullyan/${stem}`,
+      );
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error('Dialect registry failed its gates:\n  ' + failures.join('\n  '));
   console.error(
@@ -212,6 +270,17 @@ for (const lang of languages) {
       .sort((a, b) => a.localeCompare(b))
       .join('\n');
 
+    // Types need their own `export type` statement: a value re-export cannot
+    // carry them, and without them a dialect can only express call sites whose
+    // types are fully inferred — which excludes most real TypeScript.
+    const typeLines = Object.entries(typeVocabulary[mod] ?? {})
+      .map(([concept, names]) => `  ${concept} as ${names[lang]},`)
+      .sort((a, b) => a.localeCompare(b))
+      .join('\n');
+
+    const typeBlock =
+      typeLines === '' ? '' : `\nexport type {\n${typeLines}\n} from '../../${stem}/index';\n`;
+
     const body = `// GENERATED FILE — DO NOT EDIT.
 // Run \`pnpm dialects\` to regenerate. Source of truth is src/lang/registry.ts.
 //
@@ -220,7 +289,7 @@ for (const lang of languages) {
 export {
 ${lines}
 } from '../../${stem}/index';
-`;
+${typeBlock}`;
     writeFileSync(join(dir, `${mod}.ts`), body);
     written += 1;
   }
@@ -231,9 +300,9 @@ ${lines}
 // wants to rewrite the files, and the drift check sees that rewrite as drift.
 execFileSync('pnpm', ['exec', 'oxfmt', 'src/lang'], { cwd: ROOT, stdio: 'ignore' });
 
-const total = Object.values(vocabulary).reduce((n, c) => n + Object.keys(c).length, 0);
+const count = (t) => Object.values(t).reduce((n, c) => n + Object.keys(c).length, 0);
 console.log(
   // Names all four gates above. A summary that under-reports what ran is the
   // same failure as a gate that does not run: you cannot tell from the output.
-  `dialects: ${total} concepts x ${languages.length} languages, ${written} modules generated — total, injective, bijective, grounded`,
+  `dialects: ${count(vocabulary)} values + ${count(typeVocabulary)} types x ${languages.length} languages, ${written} modules generated — total, injective, bijective, grounded`,
 );
