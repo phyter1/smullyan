@@ -41,18 +41,26 @@ The local directory is `~/code/fnctnl`; the package and repo are both
    point, so a documented-usage decision can never be mistaken for a native one.
    One of them corrected a false premise: `converger`/`convergir` was recorded as
    a regional split, but the DPD describes a frequency difference and no source
-   documents a Spain/Latin America distribution. Each is
-   structured data pinned to the sites it concerns, so answering one means
-   editing the vocabulary and moving the entry to `resolvedQuestions` with a
-   `Resolution` attached — do only one and the build goes red. Resolutions are
-   kept rather than deleted: the vocabulary records the verdict, and this is the
-   only place the argument survives.
+   documents a Spain/Latin America distribution — the lean going in was to
+   _rename_ it, and the sources said the opposite.
 
-   `resolvedQuestions` is empty, so its gates would be vacuous. They are written
-   as a pure `faultsIn` in `test/dialects.test.ts`, proved against fixtures, and
-   then applied to the real list — the pattern to copy for any list that starts
-   empty. Neutering `faultsIn` must fail eight tests; if it does not, the
-   fixtures have stopped being load-bearing.
+   Every question is structured data pinned to the sites it concerns, so
+   answering one means editing the vocabulary and moving the entry to
+   `resolvedQuestions` with a `Resolution` attached — do only one and the build
+   goes red. Resolutions are kept rather than deleted: the vocabulary records the
+   verdict, and this is the only place the argument survives.
+
+   The four that remain are the ones with no citable answer, which is why they
+   are the ones left. Do not close them from intuition, and do not write a
+   recommendation into the file — a reviewer who reads one gives a less
+   independent judgement, and anchoring is strongest on exactly this kind of
+   call.
+
+   `resolvedQuestions` started empty, which would have made its gates vacuous.
+   They are written as a pure `faultsIn` in `test/dialects.test.ts`, proved
+   against fixtures, and only then applied to the real list — the pattern to copy
+   for any list that starts empty. Neutering `faultsIn` must fail eight tests; if
+   it does not, the fixtures have stopped being load-bearing.
 
 2. **More languages are a data change, not engineering.** Add a key to every
    entry in `src/lang/registry.ts`; the gates catch anything missed.
@@ -102,6 +110,34 @@ birds  option  result  task  reader  pipe  core  types  deps  ci  build  release
 
 Feature branch → PR → squash merge. Never push to `main`. Branch protection
 requires the `CI OK` check, signed commits, and linear history.
+
+**Never update a PR branch server-side.** When another PR lands first and yours
+is "not up to date with the base branch", `gh pr update-branch` (and the green
+button in the UI) rebases on GitHub's side and writes the result **unsigned**.
+Signed commits are required, so this leaves the PR permanently unmergeable — and
+it looks like it helped. Rebase locally instead, where your key signs it:
+
+```sh
+git fetch origin && git rebase origin/main
+git log --show-signature -1        # expect: Good "git" signature
+git push --force-with-lease origin <branch>
+```
+
+This is the one force-push that is fine — your own feature branch, after a
+rebase you performed. `--force-with-lease` refuses if the remote moved since
+your fetch.
+
+The failure is hard to read from the usual output, because the merge is blocked
+by _policy_, not by conflicts:
+
+| Field                            | Says        | Means                        |
+| -------------------------------- | ----------- | ---------------------------- |
+| `mergeable`                      | `MERGEABLE` | the content merges cleanly   |
+| `mergeStateStatus`               | `BLOCKED`   | a protection rule refuses it |
+| `pulls/N/commits[].verification` | `unsigned`  | **the actual reason**        |
+
+`gh pr merge` reports only "the base branch policy prohibits the merge", which
+names no rule. Go to the commits API for the real answer.
 
 ---
 

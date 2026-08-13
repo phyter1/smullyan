@@ -17,18 +17,22 @@
  * pipe(some(20), map(increment), getOrElse(() => 0))
  * ```
  *
- * ## Three properties, all enforced at build time
+ * ## Four properties, all enforced at build time
  *
- * Naturalness needs a native speaker. These three do not, and they are what
+ * Naturalness needs a native speaker. These four do not, and they are what
  * make the codemod trustworthy:
  *
  * - **Total** — every concept has a name in every language.
  * - **Injective** — within a module, no two concepts share a name, so
  *   translation cannot be ambiguous in either direction.
- * - **Reversible** — `translate(a → b → a)` is the identity, asserted as a
- *   property test over real source files.
+ * - **Bijective** — globally, one foreign name ↔ one concept. Per-module
+ *   injectivity is not enough: the codemod's rename map is global, so a
+ *   cross-module collision would translate back to the wrong concept.
+ * - **Grounded** — every concept is a real export of the built package.
  *
- * A violation of any of them fails the build rather than a review.
+ * A violation of any of them fails the build rather than a review. On top of
+ * those, `translate(a → b → a) ≡ identity` is asserted as a property test over
+ * real source files.
  *
  * ## Scope
  *
