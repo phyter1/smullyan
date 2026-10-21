@@ -266,7 +266,7 @@
     "publint": "0.3.23",
     "tsdown": "0.22.14",
     "typescript": "7.0.2",
-    "vite": "8.2.0",
+    "vite": "8.2.4",
     "vitepress": "1.6.4",
     "vitest": "4.1.10"
   },
